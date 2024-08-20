@@ -1,75 +1,64 @@
 import { useEffect, useRef, useState } from "react";
-import { Gantt, Task as GanntTask } from "./gantt/src";
+import { Gantt, Task as GanttTask } from "./gantt/src";
 import { getTask } from "../api.service";
 
 export default function Custom() {
-  type GanntTaskExtendatetype = GanntTask & {
-    subtask?: GanntTaskExtendatetype[];
+  type GanttTaskExtendedType = GanttTask & {
+    subtask?: GanttTaskExtendedType[];
     duration: number;
   };
-  const [tasks, settasks] = useState<any[]>();
-  const convertedData = useRef<any[]>();
+
+  const [tasks, setTasks] = useState<GanttTaskExtendedType[]>([]);
+  const convertedData = useRef<GanttTaskExtendedType[]>([]);
+
   const refetch = () => {
-    getTask().then((res) => settasks(res.data));
+    getTask().then((res) => setTasks(res.data));
   };
+
   useEffect(() => {
     refetch();
   }, []);
 
   useEffect(() => {
-    if (tasks) {
-      const taskData: GanntTaskExtendatetype[] = [];
-      tasks.forEach((e) => {
-        taskData.push(convertTasks(e));
-        e.subtasks.forEach((t: { taskId: any }) => {
-          if (t.taskId == e.parentTaskId) {
-            taskData.push(convertTasks(t));
-          }
-        });
-      });
-      convertedData.current = sortConvertedData(taskData);
+    if (tasks.length > 0) {
+      const taskData: GanttTaskExtendedType[] = tasks.map((task) => convertTasks(task));
+      convertedData.current = sortAndFlattenTasks(taskData);
     }
   }, [tasks]);
-  const sortConvertedData = (data: GanntTaskExtendatetype[]) => {
-    const parentGrope = data.filter((d) => !d.project).map((t) => [t]);
-    data
-      .filter((d) => d.project)
-      .forEach((t) => {
-        const findParentGrope = parentGrope.find(
-          (pg) => pg.find((p) => !p.project)?.id == t.project
-        );
-        findParentGrope?.push(t);
-      });
-    return parentGrope.flat();
 
-    // const sortedData: GanntTaskExtendatetype[] = []
-    // const recursion = (dataw: GanntTaskExtendatetype[]) => {
-    //   dataw.forEach(e => {
-    //     sortedData.push(e)
-    //     if (e.subtask && e.subtask?.length > 0) {
-    //       recursion(e.subtask)
-    //     }
-    //   })
-    // }
+  const sortAndFlattenTasks = (
+    tasks: GanttTaskExtendedType[],
+    parentTaskId: string | null = null
+  ): GanttTaskExtendedType[] => {
+    const sortedData: GanttTaskExtendedType[] = [];
 
-    // recursion(data)
-    // console.log(sortedData);
-    // return sortedData
+    tasks.forEach((task) => {
+      if (task.project === parentTaskId) {
+        sortedData.push(task);
+
+        if (task.subtask && task.subtask.length > 0) {
+          const subtasks = sortAndFlattenTasks(task.subtask, task.id);
+          sortedData.push(...subtasks);
+        }
+      }
+    });
+
+    return sortedData;
   };
-  const convertTasks = (originalTask: any): GanntTaskExtendatetype => {
+
+  const convertTasks = (originalTask: any): GanttTaskExtendedType => {
     const startDate = new Date(originalTask.startDate ?? "");
     startDate.setUTCHours(0, 0, 0, 0);
-    startDate.setDate(startDate.getDate());
+
     const endDate = new Date(originalTask.endDate ?? new Date());
     endDate.setUTCHours(0, 0, 0, 0);
-    endDate.setDate(endDate.getDate());
 
-    // Check if dependencies and subtasks exist and handle accordingly
     const dependencies = originalTask.dependencies
       ? originalTask.dependencies.map(
           (dep: { dependendentOnTaskId: any }) => dep.dependendentOnTaskId
         )
       : [];
+
     const subtask =
       originalTask.subtasks && originalTask.subtasks.length > 0
         ? originalTask.subtasks.map((s: any) => convertTasks(s))
@@ -88,34 +77,28 @@ export default function Custom() {
       progress: originalTask.completionPecentage
         ? parseFloat(originalTask.completionPecentage)
         : 0,
-      project: originalTask.parentTaskId ?? undefined,
+      project: originalTask.parentTaskId ?? null,
       dependencies,
       hideChildren: true,
       subtask,
       duration: calculateDurations(startDate, endDate),
     };
   };
-  function calculateDurations(startDate: Date, endDate: Date): number {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    const durationInMilliseconds = end.getTime() - start.getTime();
-    const millisecondsInSecond = 1000;
-    const millisecondsInMinute = millisecondsInSecond * 60;
-    const millisecondsInHour = millisecondsInMinute * 60;
-    const millisecondsInDay = millisecondsInHour * 24;
-    const days = Math.floor(durationInMilliseconds / millisecondsInDay);
-    return days;
-  }
+
+  const calculateDurations = (startDate: Date, endDate: Date): number => {
+    const durationInMilliseconds = endDate.getTime() - startDate.getTime();
+    return Math.floor(durationInMilliseconds / (1000 * 60 * 60 * 24));
+  };
 
   return (
     <div>
-        <button onClick={refetch}>reload</button>
-      {convertedData.current && (
+      <button onClick={refetch}>Reload</button>
+      {convertedData.current.length > 0 && (
         <Gantt
-          tasks={convertedData.current ?? []}
+          tasks={convertedData.current}
           preStepsCount={2}
-          onDateChange={(e) => console.log("e", e)}
-          onProgressChange={(e) => console.log("e", e)}
+          onDateChange={(e) => console.log("Date changed:", e)}
+          onProgressChange={(e) => console.log("Progress changed:", e)}
         />
       )}
     </div>

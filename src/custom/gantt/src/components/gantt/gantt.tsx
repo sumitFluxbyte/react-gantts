@@ -382,11 +382,40 @@ export const Gantt: React.FunctionComponent<GanttProps> = ({
     }
     setSelectedTask(newSelectedTask);
   };
+  // const handleExpanderClick = (task: Task) => {
+  //   if (onExpanderClick && task.hideChildren !== undefined) {
+  //     onExpanderClick({ ...task, hideChildren: !task.hideChildren });
+  //   }
+  // };
   const handleExpanderClick = (task: Task) => {
-    if (onExpanderClick && task.hideChildren !== undefined) {
-      onExpanderClick({ ...task, hideChildren: !task.hideChildren });
-    }
+    // Toggle the hideChildren property of the clicked task
+    const newHideChildren = !task.hideChildren;
+  
+    // Function to recursively toggle visibility of children tasks
+    const toggleChildrenVisibility = (tasks: BarTask[], parentId: string, hide: boolean): BarTask[] => {
+      return tasks.map((t:any) => {
+        if (t.project === parentId) { // Check if this task is a child of the current task
+          t.isVisible = !hide; // Set visibility based on the parent's hide state
+          if (t.hideChildren !== undefined) {
+            tasks = toggleChildrenVisibility(tasks, t.id, hide); // Recursively toggle visibility for all children
+          }
+        }
+        return t;
+      });
+    };
+  
+    // Update the visibility of children tasks in the state
+    setBarTasks(prevTasks => {
+      // First, toggle the clicked task's hideChildren property
+      const updatedTasks = prevTasks.map(t => 
+        t.id === task.id ? { ...t, hideChildren: newHideChildren } : t
+      );
+  
+      // Then, recursively update the visibility of its child tasks
+      return toggleChildrenVisibility(updatedTasks, task.id, newHideChildren);
+    });
   };
+     
   const gridProps: GridProps = {
     columnWidth,
     svgWidth,
