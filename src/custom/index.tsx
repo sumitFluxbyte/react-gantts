@@ -7,8 +7,8 @@ import zoomout from "./svg/zoomout.svg";
 import refresh from "./svg/refresh.svg";
 import Dialog from "./Dialog";
 export default function Custom() {
-  type GanttTaskExtendedType = GanntTask & {
-    subtask?: GanttTaskExtendedType[];
+  type GanntTaskExtendatetype = GanntTask & {
+    subtask?: GanntTaskExtendatetype[];
     duration: number;
     assign: any[];
     level?: string;
@@ -24,10 +24,11 @@ export default function Custom() {
     refetch();
   }, []);
   const [expanded, setExpanded] = useState<string[]>();
-
+  console.log(expanded);
+  
   useEffect(() => {
     if (tasks) {
-      const taskData: GanttTaskExtendedType[] = tasks
+      const taskData: GanntTaskExtendatetype[] = tasks
         .filter((t: { parentTaskId: any }) => !t.parentTaskId)
         .sort(
           (
@@ -42,10 +43,10 @@ export default function Custom() {
   }, [tasks, expanded]);
 
   const sortAndFlattenTasks = (
-    tasks: GanttTaskExtendedType[],
+    tasks: GanntTaskExtendatetype[],
     parentTaskId: string | null = null
-  ): GanttTaskExtendedType[] => {
-    const sortedData: GanttTaskExtendedType[] = [];
+  ): GanntTaskExtendatetype[] => {
+    const sortedData: GanntTaskExtendatetype[] = [];
     tasks.forEach((task) => {
       if (!parentTaskId) {
         sortedData.push(task);
@@ -63,13 +64,13 @@ export default function Custom() {
   };
 
   const sortAndFlattenTask = (
-    tasks: GanttTaskExtendedType[]
-  ): GanttTaskExtendedType[] => {
-    const sortedData: GanttTaskExtendedType[] = [];
+    tasks: GanntTaskExtendatetype[]
+  ): GanntTaskExtendatetype[] => {
+    const sortedData: GanntTaskExtendatetype[] = [];
 
     const topLevelTasks = tasks.filter((t) => !t.project);
 
-    const flattenTasks = (task: GanttTaskExtendedType, level: string) => {
+    const flattenTasks = (task: GanntTaskExtendatetype, level: string) => {
       sortedData.push({ ...task, level }); // Add level to track hierarchy
       if (task.subtask) {
         task.subtask.forEach((subtask, index) => {
@@ -86,7 +87,7 @@ export default function Custom() {
     return sortedData;
   };
 
-  const convertTasks = (originalTask: any): GanttTaskExtendedType => {
+  const convertTasks = (originalTask: any): GanntTaskExtendatetype => {
     const startDate = new Date(originalTask.startDate);
     startDate.setHours(0, 0, 0, 0);
     startDate.setDate(startDate.getDate());
@@ -98,7 +99,6 @@ export default function Custom() {
           .filter((e: any) => e.dependentType == "PREDECESSORS")
           .map((dep: { dependendentOnTaskId: any }) => dep.dependendentOnTaskId)
       : [];
-
     const subtask =
       originalTask.subtasks && originalTask.subtasks.length > 0
         ? originalTask.subtasks
@@ -130,7 +130,7 @@ export default function Custom() {
       progress: originalTask.completionPecentage
         ? parseFloat(originalTask.completionPecentage)
         : 0,
-      project: originalTask.parentTaskId ?? null,
+      project: originalTask.parentTaskId ?? undefined,
       dependencies,
       hideChildren: !expanded?.includes(originalTask.taskId),
       subtask,
