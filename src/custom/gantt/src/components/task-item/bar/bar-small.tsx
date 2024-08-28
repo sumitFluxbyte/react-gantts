@@ -20,6 +20,7 @@ export const BarSmall: React.FC<TaskItemProps> = ({
   return (
     <g className={styles.barWrapper} tabIndex={0}>
       <BarDisplay
+        task={task}
         x={task.x1}
         y={task.y}
         width={task.x2 - task.x1}

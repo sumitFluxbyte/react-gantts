@@ -71,7 +71,7 @@ function Bryntum() {
 
     setConnection(connections);
     setTaskData(convertedData);
-    console.log("call");
+    // //console.log("call");
   }, [rawTask]);
 
   const convertTask = (task: any): object | EventModel | TaskModel => {

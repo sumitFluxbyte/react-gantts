@@ -1,0 +1,3 @@
+.rmResizeIcon::-webkit-resizer {
+    @apply hidden
+  }

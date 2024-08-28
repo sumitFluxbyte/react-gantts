@@ -27,10 +27,11 @@ export const Project: React.FC<TaskItemProps> = ({ task, isSelected }) => {
     task.x2 - 15,
     task.y + task.height / 2 - 1,
   ].join(",");
+  //console.log("projectWith", task.progressWidth, projectLeftTriangle);
 
   return (
     <g tabIndex={0} className={styles.projectWrapper}>
-      <rect
+      {/* <rect
         fill={barColor}
         x={task.x1}
         width={projectWith}
@@ -39,18 +40,18 @@ export const Project: React.FC<TaskItemProps> = ({ task, isSelected }) => {
         rx={task.barCornerRadius}
         ry={task.barCornerRadius}
         className={styles.projectBackground}
-      />
+      /> */}
       <rect
         x={task.progressX}
         width={task.progressWidth}
         y={task.y}
-        height={task.height}
-        ry={task.barCornerRadius}
+        height={task.height / 2}
         rx={task.barCornerRadius}
-        fill={processColor}
+        ry={task.barCornerRadius}
+        fill={barColor}
       />
       <rect
-        fill={barColor}
+        fill={barColor + "a4"}
         x={task.x1}
         width={projectWith}
         y={task.y}
@@ -59,16 +60,30 @@ export const Project: React.FC<TaskItemProps> = ({ task, isSelected }) => {
         ry={task.barCornerRadius}
         className={styles.projectTop}
       />
+      {task.progressWidth > 120 && (
+        <polygon
+          className={styles.projectTop}
+          points={projectLeftTriangle}
+          fill={barColor}
+        />
+      )}
       <polygon
         className={styles.projectTop}
         points={projectLeftTriangle}
-        fill={barColor}
+        fill={barColor + "a4"}
       />
       <polygon
         className={styles.projectTop}
         points={projectRightTriangle}
-        fill={barColor}
+        fill={barColor + "a4"}
       />
+      {task.progressWidth === projectWith && (
+        <polygon
+          className={styles.projectTop}
+          points={projectRightTriangle}
+          fill={barColor}
+        />
+      )}
     </g>
   );
 };

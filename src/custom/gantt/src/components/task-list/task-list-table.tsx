@@ -1,8 +1,8 @@
 import React, { useMemo } from "react";
 import styles from "./task-list-table.module.css";
-import { Task } from "../../types/public-types";
+import { columnsType, Task } from "../../types/public-types";
 
-const localeDateStringCache:any = {};
+const localeDateStringCache: any = {};
 const toLocaleDateStringFactory =
   (locale: string) =>
   (date: Date, dateTimeOptions: Intl.DateTimeFormatOptions) => {
@@ -31,6 +31,8 @@ export const TaskListTableDefault: React.FC<{
   selectedTaskId: string;
   setSelectedTask: (taskId: string) => void;
   onExpanderClick: (task: Task) => void;
+  taskSelect: (task: Task) => void;
+  columns: columnsType[];
 }> = ({
   rowHeight,
   rowWidth,
@@ -39,74 +41,67 @@ export const TaskListTableDefault: React.FC<{
   fontSize,
   locale,
   onExpanderClick,
+  columns,
+  taskSelect,
 }) => {
-  const toLocaleDateString = useMemo(
-    () => toLocaleDateStringFactory(locale),
-    [locale]
-  );
-
   return (
     <div
-      className={styles.taskListWrapper}
+      className={styles.taskListWrapper + "w-full select-none "}
       style={{
         fontFamily: fontFamily,
         fontSize: fontSize,
       }}
     >
-      {tasks.map(t => {
+      {tasks.map((t: any) => {
         let expanderSymbol = "";
         if (t.hideChildren === false) {
           expanderSymbol = "▼";
         } else if (t.hideChildren === true) {
           expanderSymbol = "▶";
         }
-
         return (
           <div
-            className={styles.taskListTableRow}
+            onClick={() => taskSelect(t)}
+            className={
+              styles.taskListTableRow + " !border-b-2 border-b-gray-500 cursor-pointer"
+            }
             style={{ height: rowHeight }}
             key={`${t.id}row`}
           >
-            <div
-              className={styles.taskListCell}
-              style={{
-                minWidth: rowWidth,
-                maxWidth: rowWidth,
-              }}
-              title={t.name}
-            >
-              <div className={styles.taskListNameWrapper}>
+            {columns.map((c, index) => {
+              return (
                 <div
-                  className={
-                    expanderSymbol
-                      ? styles.taskListExpander
-                      : styles.taskListEmptyExpander
-                  }
-                  onClick={() => onExpanderClick(t)}
+                  className={styles.taskListCell + " last:w-full"}
+                  style={{
+                    minWidth: c.width ? `${c.width}px` : rowWidth,
+                    maxWidth: c.width ? `${c.width}px` : rowWidth,
+                  }}
+                  title={t.name}
                 >
-                  {expanderSymbol}
+                  <div
+                    className={
+                      styles.taskListNameWrapper +
+                      ` ${t.project ? " ml-5" : ""} `
+                    }
+                  >
+                    {index === 0 && (
+                      <div
+                        className={
+                          expanderSymbol
+                            ? styles.taskListExpander
+                            : styles.taskListEmptyExpander
+                        }
+                        onClick={() => onExpanderClick(t)}
+                      >
+                        {expanderSymbol}
+                      </div>
+                    )}
+
+                    {c.render ? c.render(t) : `${t[c.field]}`}
+                  </div>
                 </div>
-                <div>{t.name}</div>
-              </div>
-            </div>
-            <div
-              className={styles.taskListCell}
-              style={{
-                minWidth: rowWidth,
-                maxWidth: rowWidth,
-              }}
-            >
-              &nbsp;{toLocaleDateString(t.start, dateTimeOptions)}
-            </div>
-            <div
-              className={styles.taskListCell}
-              style={{
-                minWidth: rowWidth,
-                maxWidth: rowWidth,
-              }}
-            >
-              &nbsp;{toLocaleDateString(t.end, dateTimeOptions)}
-            </div>
+              );
+            })}{" "}
           </div>
         );
       })}

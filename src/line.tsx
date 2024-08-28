@@ -36,7 +36,7 @@ const ConnectDivsWithLine = () => {
           x2: left + width / 2,
           y2: top + height / 2,
         }));
-        console.log("Connected:", startElement.id, "to", endElement.id);
+        // //console.log("Connected:", startElement.id, "to", endElement.id);
       } else {
         // Reset line if not connected to a valid end element
         setLine(null);

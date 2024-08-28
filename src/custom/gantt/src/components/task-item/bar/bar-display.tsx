@@ -1,7 +1,9 @@
 import React from "react";
 import style from "./bar.module.css";
+import { Task } from "../../../types/public-types";
 
 type BarDisplayProps = {
+  task:Task
   x: number;
   y: number;
   width: number;
@@ -20,6 +22,7 @@ type BarDisplayProps = {
   onMouseDown: (event: React.MouseEvent<SVGPolygonElement, MouseEvent>) => void;
 };
 export const BarDisplay: React.FC<BarDisplayProps> = ({
+  task,
   x,
   y,
   width,
@@ -42,6 +45,7 @@ export const BarDisplay: React.FC<BarDisplayProps> = ({
   return (
     <g onMouseDown={onMouseDown}>
       <rect
+        id={task.id}
         x={x}
         width={width}
         y={y}
@@ -52,6 +56,7 @@ export const BarDisplay: React.FC<BarDisplayProps> = ({
         className={style.barBackground}
       />
       <rect
+        id={task.id}
         x={progressX}
         width={progressWidth}
         y={y}
