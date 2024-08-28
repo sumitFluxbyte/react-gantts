@@ -315,37 +315,92 @@ export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
           const elementBehind = document.elementsFromPoint(e.clientX, e.clientY)[1];
           if (elementBehind && elementBehind.getAttribute("id")) {
             taskId = elementBehind.getAttribute("id");
-            console.log("taskId", taskId);
 
           }
         }
-  
-  
-        const task = tasks.find((t) => t.id === taskId);
-        const startTask = tasks.find(
+        const task:any = tasks.find((t) => t.id === taskId);
+        const startTask:any = tasks.find(
           (t) => t.id === startElement?.getAttribute("data-taskId")
         );
-        if (startTask) {
-          if (startTask.id === task?.project || task?.id === startTask.project) {
-            setDraggingTask(false);
-          } else {
-            setDraggingTask(true);
-          }
-        }
+  
+        validate(task,startTask)
       }
     }
   };
-  
+const validate = (task: any, startTask: any) => {
+    if (!task || !startTask) return false;
+
+    const startTaskLevel = startTask.level.split(".");
+    const currentTaskLevel = task.level.split(".");
+
+    console.log('Start Task Level:', startTaskLevel);
+    console.log('Current Task Level:', currentTaskLevel);
+
+    setGanttEvent({ action: "dragging", originalSelectedTask: startTask, changedTask: task });
+
+    // If startTask is a parent, it cannot have a dependency with its own subtasks
+    if (isParent(startTaskLevel) && isSubtaskOf(startTaskLevel, currentTaskLevel)) {
+        setDraggingTask(false);
+        return false;
+    }
+
+    // If startTask is a subtask, it cannot have a dependency with its own parent
+    if (isSubtask(startTaskLevel) && isParentOf(currentTaskLevel, startTaskLevel)) {
+        setDraggingTask(false);
+        return false;
+    }
+
+    // Parent can have dependencies with another parent's subtasks
+    // Subtask can have dependencies with another parent
+    if (
+        (isParent(startTaskLevel) && !isSubtaskOf(startTaskLevel, currentTaskLevel)) ||
+        (isSubtask(startTaskLevel) && !isParentOf(currentTaskLevel, startTaskLevel))
+    ) {
+        setDraggingTask(true);
+        return true;
+    }
+
+    setDraggingTask(false);
+    return false;
+};
+
+// Helper function to check if a task is a parent task
+const isParent = (taskLevel: string[]): boolean => {
+    return taskLevel.length === 1;
+};
+
+// Helper function to check if a task is a subtask
+const isSubtask = (taskLevel: string[]): boolean => {
+    return taskLevel.length > 1;
+};
+
+// Helper function to check if a task is a subtask of another
+const isSubtaskOf = (parentLevel: string[], subtaskLevel: string[]): boolean => {
+    return subtaskLevel.length > parentLevel.length &&
+           subtaskLevel.slice(0, parentLevel.length).every((level, index) => level === parentLevel[index]);
+};
+
+// Helper function to check if a task is a parent of another
+const isParentOf = (parentLevel: string[], subtaskLevel: string[]): boolean => {
+    return parentLevel.length < subtaskLevel.length &&
+           parentLevel.every((level, index) => level === subtaskLevel[index]);
+};
+
+
 
   const endDragEvent = (e: any, data?: any) => {
     if (dragging) {
       setLine(null);
       setDragging(false);
       setStartElement(null);
+      const task:any = tasks.find((t) => t.id === e.target?.getAttribute("data-taskId"));
+      const startTask:any = tasks.find(
+        (t) => t.id === startElement?.getAttribute("data-taskId")
+      );
       if (
         startElement?.getAttribute("data-taskId") &&
         startElement?.getAttribute("data-type") &&
-        e.target
+        e.target && validate(task,startTask)
       ) {
         onDepandancyDragEnd(
           {
@@ -368,6 +423,7 @@ export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
       setDragging(false);
       setStartElement(null);
       setDraggingTask(true)
+      setGanttEvent({action:''})
     });
   }, []);
   const [pop, setPop] = useState<string[]>([]);
@@ -404,7 +460,7 @@ export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
             y1={line.y1}
             x2={line.x2}
             y2={line.y2}
-            stroke="#444444"
+            stroke={draggingTask ? "#00ff00": "#ff0000"}
             strokeDasharray={5}
           />
         )}
@@ -422,6 +478,7 @@ export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
                 arrowIndent={arrowIndent}
                 rtl={rtl}
                 depandanyData={depandanyData}
+                setGanttEvent={setGanttEvent}
               />
             );
           });

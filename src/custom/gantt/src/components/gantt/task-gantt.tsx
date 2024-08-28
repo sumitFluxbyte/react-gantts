@@ -91,6 +91,7 @@ export const TaskGantt: React.FC<TaskGanttProps> = ({
           height={barProps.rowHeight * barProps.tasks.length}
           fontFamily={barProps.fontFamily}
           ref={ganttSVGRef}
+          className="dragGrid"
         >
           <Grid
             {...gridProps}

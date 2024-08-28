@@ -182,7 +182,7 @@ export const TaskItem: React.FC<TaskItemProps> = (props) => {
         className={`group ${
           selectedTasks && selectedTasks.id === task.id
             ? "opacity-100 contrast-100"
-            : "opacity-50 "
+            : "opacity-90 "
         } ${selectedTasks === undefined ? " !opacity-100 contrast-100" : " "} ${
           pop.includes(task.id) ? " !opacity-100 contrast-100" : ""
         } duration-50000 transition-opacity`}

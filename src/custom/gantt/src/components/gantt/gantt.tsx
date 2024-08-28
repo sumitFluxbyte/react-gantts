@@ -24,6 +24,8 @@ import { HorizontalScroll } from "../other/horizontal-scroll";
 import { removeHiddenTasks, sortTasks } from "../../helpers/other-helper";
 import styles from "./gantt.module.css";
 import { ContextManu } from "../other/contextmanu";
+import { DepandanyTooltip } from "../other/depandancyTooltip";
+import { DepandanyLineTooltip } from "../other/depandancyLineTooltip";
 
 export const Gantt: React.FunctionComponent<GanttProps> = ({
   tasks,
@@ -509,39 +511,41 @@ export const Gantt: React.FunctionComponent<GanttProps> = ({
     }
     setSelectedTask(newSelectedTask);
   };
-  // const handleExpanderClick = (task: Task) => {
-  //   if (onExpanderClick && task.hideChildren !== undefined) {
-  //     onExpanderClick({ ...task, hideChildren: !task.hideChildren });
-  //   }
-  // };
   const handleExpanderClick = (task: Task) => {
-    // Toggle the hideChildren property of the clicked task
-    const newHideChildren = !task.hideChildren;
-  
-    // Function to recursively toggle visibility of children tasks
-    const toggleChildrenVisibility = (tasks: BarTask[], parentId: string, hide: boolean): BarTask[] => {
-      return tasks.map((t:any) => {
-        if (t.project === parentId) { // Check if this task is a child of the current task
-          t.isVisible = !hide; // Set visibility based on the parent's hide state
-          if (t.hideChildren !== undefined) {
-            tasks = toggleChildrenVisibility(tasks, t.id, hide); // Recursively toggle visibility for all children
-          }
-        }
-        return t;
-      });
-    };
-  
-    // Update the visibility of children tasks in the state
-    setBarTasks(prevTasks => {
-      // First, toggle the clicked task's hideChildren property
-      const updatedTasks = prevTasks.map(t => 
-        t.id === task.id ? { ...t, hideChildren: newHideChildren } : t
-      );
-  
-      // Then, recursively update the visibility of its child tasks
-      return toggleChildrenVisibility(updatedTasks, task.id, newHideChildren);
-    });
+    if (onExpanderClick && task.hideChildren !== undefined) {
+      onExpanderClick({ ...task, hideChildren: !task.hideChildren });
+    }
   };
+  // const handleExpanderClick = (task: Task) => {
+  //   console.log(task);
+    
+  //   // Toggle the hideChildren property of the clicked task
+  //   const newHideChildren = !task.hideChildren;
+  
+  //   // Function to recursively toggle visibility of children tasks
+  //   const toggleChildrenVisibility = (tasks: BarTask[], parentId: string, hide: boolean): BarTask[] => {
+  //     return tasks.map((t:any) => {
+  //       if (t.project === parentId) { // Check if this task is a child of the current task
+  //         t.isVisible = !hide; // Set visibility based on the parent's hide state
+  //         if (t.hideChildren !== undefined) {
+  //           tasks = toggleChildrenVisibility(tasks, t.id, hide); // Recursively toggle visibility for all children
+  //         }
+  //       }
+  //       return t;
+  //     });
+  //   };
+  
+  //   // Update the visibility of children tasks in the state
+  //   setBarTasks(prevTasks => {
+  //     // First, toggle the clicked task's hideChildren property
+  //     const updatedTasks = prevTasks.map(t => 
+  //       t.id === task.id ? { ...t, hideChildren: newHideChildren } : t
+  //     );
+  
+  //     // Then, recursively update the visibility of its child tasks
+  //     return toggleChildrenVisibility(updatedTasks, task.id, newHideChildren);
+  //   });
+  // };
      
   const gridProps: GridProps = {
     columnWidth,
@@ -620,9 +624,9 @@ export const Gantt: React.FunctionComponent<GanttProps> = ({
       }
     },
   };
-
+  
   return (
-    <div>
+    <div className="gantt">
       <div
         className={styles.wrapper}
         onKeyDown={handleKeyDown}
@@ -648,7 +652,7 @@ export const Gantt: React.FunctionComponent<GanttProps> = ({
             setScrollX(data);
           }}
         />
-        {ganttEvent.changedTask && taskHeight && !contextManu && (
+        {ganttEvent.changedTask && taskHeight   && ganttEvent.action == "mouseenter"&& (
           <Tooltip
             arrowIndent={arrowIndent}
             rowHeight={rowHeight}
@@ -662,6 +666,19 @@ export const Gantt: React.FunctionComponent<GanttProps> = ({
             TooltipContent={TooltipContent}
             rtl={rtl}
             svgWidth={svgWidth}
+          />
+        )}
+        {ganttEvent.changedTask &&ganttEvent.originalSelectedTask && ganttEvent.action === "dragging" && (
+          <DepandanyTooltip
+            endTask={ganttEvent.changedTask}
+            task={ganttEvent.originalSelectedTask}
+           
+          />
+        )}
+        {ganttEvent.changedTask &&ganttEvent.originalSelectedTask && ganttEvent.action === "hoverOnDependance" && (
+          <DepandanyLineTooltip
+            endTask={ganttEvent.changedTask}
+            task={ganttEvent.originalSelectedTask}
           />
         )}
         {ganttEvent.changedTask && ganttEvent.action === "contextmenu" && (

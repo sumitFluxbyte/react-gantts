@@ -27,6 +27,7 @@ export const BarDateHandle: React.FC<BarDateHandleProps> = ({
       ry={barCornerRadius}
       rx={barCornerRadius}
       onMouseDown={onMouseDown}
+      fill="#fff"
     />
   );
 };

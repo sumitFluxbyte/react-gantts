@@ -55,29 +55,34 @@ export const GridBody: React.FC<GridBodyProps> = ({
     />,
   ];
   for (const task of tasks) {
-    gridRows.push(
-      <rect
-        key={"Row" + task.id}
-        id={task.id}
-        x="0"
-        y={y}
-        width={svgWidth}
-        height={rowHeight}
-        className={styles.gridRow}
-      />
-    );
-    rowLines.push(
-      <line
-        key={"RowLine" + task.id}
-        x="0"
-        id={task.id}
-        y1={y + rowHeight}
-        x2={svgWidth}
-        y2={y + rowHeight}
-        className={styles.gridRowLine}
-      />
-    );
-    y += rowHeight;
+    if (!tasks.find(t => t.id == task.project)?.hideChildren) {
+
+      gridRows.push(
+        <rect
+          key={"Row" + task.id}
+          id={task.id}
+          x="0"
+          y={y}
+          width={svgWidth}
+          height={rowHeight}
+          className={styles.gridRow}
+        />
+      );
+      rowLines.push(
+        <line
+          key={"RowLine" + task.id}
+          x="0"
+          id={task.id}
+          y1={y + rowHeight}
+          x2={svgWidth}
+          y2={y + rowHeight}
+          className={styles.gridRowLine}
+        />
+
+      );
+      y += rowHeight;
+    }
+
   }
   let holidayRects: ReactChild[] = [];
   let nonWorkingDayRects: ReactChild[] = [];
@@ -175,8 +180,8 @@ export const GridBody: React.FC<GridBodyProps> = ({
 
     if (projectStartDate) {
       if ((i + 1 !== dates.length &&
-        date.getTime() <projectStartDate.getTime() &&
-        dates[i + 1].getTime() >=projectStartDate.getTime())) {
+        date.getTime() < projectStartDate.getTime() &&
+        dates[i + 1].getTime() >= projectStartDate.getTime())) {
         StartofProject = (
           <svg>
             <rect
@@ -202,7 +207,7 @@ export const GridBody: React.FC<GridBodyProps> = ({
                 y={15} // Vertically align the text inside the background
                 fill="#FFFFFF" // Text color contrasting the background
                 fontSize="12" // Adjust the font size as needed
-                className={styles.projectStartText+ " select-none"}
+                className={styles.projectStartText + " select-none"}
               >
                 Project Start
               </text>
@@ -214,8 +219,8 @@ export const GridBody: React.FC<GridBodyProps> = ({
     if (projectEndDate) {
       if (
         (i + 1 !== dates.length &&
-          date.getTime() <projectEndDate.getTime() &&
-          dates[i + 1].getTime() >=projectEndDate.getTime()) 
+          date.getTime() < projectEndDate.getTime() &&
+          dates[i + 1].getTime() >= projectEndDate.getTime())
       ) {
         EndofProject = (
           <svg>
@@ -242,7 +247,7 @@ export const GridBody: React.FC<GridBodyProps> = ({
                 y={15} // Vertically align the text inside the background
                 fill="#FFFFFF" // Text color contrasting the background
                 fontSize="12" // Adjust the font size as needed
-                className={styles.projectStartText+ " select-none"}
+                className={styles.projectStartText + " select-none"}
               >
                 Project End
               </text>

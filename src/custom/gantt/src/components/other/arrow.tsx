@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { BarTask } from "../../types/bar-task";
+import { GanttEvent } from "../../types/gantt-task-actions";
 
 type ArrowProps = {
   taskFrom: BarTask;
@@ -9,6 +10,7 @@ type ArrowProps = {
   arrowIndent: number;
   rtl: boolean;
   depandanyData:(data:any)=>void
+  setGanttEvent:(data:GanttEvent)=>void
 };
 export const Arrow: React.FC<ArrowProps> = ({
   taskFrom,
@@ -17,7 +19,8 @@ export const Arrow: React.FC<ArrowProps> = ({
   taskHeight,
   arrowIndent,
   rtl,
-  depandanyData
+  depandanyData,
+  setGanttEvent
 }) => {
   let path: string;
   let trianglePoints: string;
@@ -40,8 +43,13 @@ export const Arrow: React.FC<ArrowProps> = ({
   }
   const [width, setwidth] = useState("1.5")
   return (
-    <g className="arrow">
-      <path strokeWidth={width} d={path} fill="none" onMouseEnter={()=>setwidth("2")} onMouseLeave={()=>setwidth("1.5")} className="" onClick={() =>depandanyData({from:taskFrom,to:taskTo})} />
+    <g className="arrow" onMouseEnter={(e)=>{
+      setGanttEvent({action:"hoverOnDependance",originalSelectedTask:{...taskFrom,x1:e.clientX,y:e.clientY},changedTask:taskTo})
+      
+    }} onMouseLeave={()=>{
+      setGanttEvent({action:''})
+    }}>
+      <path strokeWidth={width} d={path} fill="none" onMouseEnter={()=>setwidth("3")} onMouseLeave={()=>setwidth("1.5")} className="" onClick={() =>depandanyData({from:taskFrom,to:taskTo})} />
       <polygon points={trianglePoints} />
     </g>
   );

@@ -91,7 +91,7 @@ export const TaskListTableDefault: React.FC<{
                             ? styles.taskListExpander
                             : styles.taskListEmptyExpander
                         }
-                        onClick={() => onExpanderClick(t)}
+                        onClick={() =>{ onExpanderClick(t)}}
                       >
                         {expanderSymbol}
                       </div>

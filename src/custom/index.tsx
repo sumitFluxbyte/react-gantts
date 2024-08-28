@@ -7,8 +7,8 @@ import zoomout from "./svg/zoomout.svg";
 import refresh from "./svg/refresh.svg";
 import Dialog from "./Dialog";
 export default function Custom() {
-  type GanntTaskExtendatetype = GanntTask & {
-    subtask?: GanntTaskExtendatetype[];
+  type GanttTaskExtendedType = GanntTask & {
+    subtask?: GanttTaskExtendedType[];
     duration: number;
     assign: any[];
     level?: string;
@@ -24,11 +24,10 @@ export default function Custom() {
     refetch();
   }, []);
   const [expanded, setExpanded] = useState<string[]>();
-  console.log(expanded);
-  
+
   useEffect(() => {
     if (tasks) {
-      const taskData: GanntTaskExtendatetype[] = tasks
+      const taskData: GanttTaskExtendedType[] = tasks
         .filter((t: { parentTaskId: any }) => !t.parentTaskId)
         .sort(
           (
@@ -42,35 +41,35 @@ export default function Custom() {
     }
   }, [tasks, expanded]);
 
-  const sortAndFlattenTasks = (
-    tasks: GanntTaskExtendatetype[],
-    parentTaskId: string | null = null
-  ): GanntTaskExtendatetype[] => {
-    const sortedData: GanntTaskExtendatetype[] = [];
-    tasks.forEach((task) => {
-      if (!parentTaskId) {
-        sortedData.push(task);
-      }
-      if (task.project === parentTaskId) {
-        sortedData.push(task);
+  // const sortAndFlattenTasks = (
+  //   tasks: GanttTaskExtendedType[],
+  //   parentTaskId: string | null = null
+  // ): GanttTaskExtendedType[] => {
+  //   const sortedData: GanttTaskExtendedType[] = [];
+  //   tasks.forEach((task) => {
+  //     if (!parentTaskId) {
+  //       sortedData.push(task);
+  //     }
+  //     if (task.project === parentTaskId) {
+  //       sortedData.push(task);
 
-        if (task.subtask && task.subtask.length > 0) {
-          const subtasks = sortAndFlattenTasks(task.subtask, task.id);
-          sortedData.push(...subtasks);
-        }
-      }
-    });
-    return sortedData;
-  };
+  //       if (task.subtask && task.subtask.length > 0) {
+  //         const subtasks = sortAndFlattenTasks(task.subtask, task.id);
+  //         sortedData.push(...subtasks);
+  //       }
+  //     }
+  //   });
+  //   return sortedData;
+  // };
 
   const sortAndFlattenTask = (
-    tasks: GanntTaskExtendatetype[]
-  ): GanntTaskExtendatetype[] => {
-    const sortedData: GanntTaskExtendatetype[] = [];
+    tasks: GanttTaskExtendedType[]
+  ): GanttTaskExtendedType[] => {
+    const sortedData: GanttTaskExtendedType[] = [];
 
     const topLevelTasks = tasks.filter((t) => !t.project);
 
-    const flattenTasks = (task: GanntTaskExtendatetype, level: string) => {
+    const flattenTasks = (task: GanttTaskExtendedType, level: string) => {
       sortedData.push({ ...task, level }); // Add level to track hierarchy
       if (task.subtask) {
         task.subtask.forEach((subtask, index) => {
@@ -84,10 +83,11 @@ export default function Custom() {
       const level = `${index + 1}`; // Top-level tasks are indexed as 1, 2, 3...
       flattenTasks(task, level);
     });
+
     return sortedData;
   };
 
-  const convertTasks = (originalTask: any): GanntTaskExtendatetype => {
+  const convertTasks = (originalTask: any): GanttTaskExtendedType => {
     const startDate = new Date(originalTask.startDate);
     startDate.setHours(0, 0, 0, 0);
     startDate.setDate(startDate.getDate());
@@ -96,31 +96,32 @@ export default function Custom() {
     endDate.setDate(endDate.getDate() + 1);
     const dependencies = originalTask.dependencies
       ? originalTask.dependencies
-          .filter((e: any) => e.dependentType == "PREDECESSORS")
-          .map((dep: { dependendentOnTaskId: any }) => dep.dependendentOnTaskId)
+        .filter((e: any) => e.dependentType == "PREDECESSORS")
+        .map((dep: { dependendentOnTaskId: any }) => dep.dependendentOnTaskId)
       : [];
+
     const subtask =
       originalTask.subtasks && originalTask.subtasks.length > 0
         ? originalTask.subtasks
-            .sort(
-              (
-                a: { startDate: string | number | Date },
-                b: { startDate: string | number | Date }
-              ) =>
-                new Date(a.startDate).getTime() -
-                new Date(b.startDate).getTime()
+          .sort(
+            (
+              a: { startDate: string | number | Date },
+              b: { startDate: string | number | Date }
+            ) =>
+              new Date(a.startDate).getTime() -
+              new Date(b.startDate).getTime()
+          )
+          .map((s: any) =>
+            convertTasks(
+              tasks.find((t: { taskId: any }) => t.taskId == s.taskId)
             )
-            .map((s: any) =>
-              convertTasks(
-                tasks.find((t: { taskId: any }) => t.taskId == s.taskId)
-              )
-            )
+          )
         : undefined;
     const types = originalTask.milestoneIndicator
       ? "milestone"
       : !subtask?.length
-      ? "task"
-      : "project";
+        ? "task"
+        : "project";
     return {
       id: originalTask.taskId,
       type: types,
@@ -130,24 +131,24 @@ export default function Custom() {
       progress: originalTask.completionPecentage
         ? parseFloat(originalTask.completionPecentage)
         : 0,
-      project: originalTask.parentTaskId ?? undefined,
+      project: originalTask.parentTaskId ?? null,
       dependencies,
       hideChildren: !expanded?.includes(originalTask.taskId),
       subtask,
       assign: originalTask.assignedUsers,
-      duration: calculateDuration(startDate, endDate),
+      duration: originalTask.duration,
       styles: {
         backgroundSelectedColor: originalTask.ganttColor
           ? originalTask.ganttColor
           : types === "project"
-          ? "#3b82f6"
-          : "#8ee997",
+            ? "#004dc3"
+            : "#7bcb83",
         progressSelectedColor: "#80808088",
         backgroundColor: originalTask.ganttColor
           ? originalTask.ganttColor
           : types === "project"
-          ? "#3b82f6"
-          : "#8ee997",
+            ? "#3b82f6"
+            : "#8ee997",
         progressColor: "#80808088",
       },
     };
@@ -163,7 +164,7 @@ export default function Custom() {
 
     return duration === 0 ? 1 : duration;
   }
-  // //console.log("convertedData.current", convertedData);
+  console.log("convertedData.current", convertedData);
   const [view, setView] = useState(ViewMode.Day);
   function dateFormater(inputDate: Date): string {
     const date = new Date(inputDate);
@@ -175,12 +176,7 @@ export default function Custom() {
       .toString()
       .padStart(2, "0")}/${year}`;
   }
-  const [zoomState, setzoomState] = useState(0);
-  const zoominout = (num: number) => {
-    let view = [ViewMode.Day, ViewMode.Week, ViewMode.Month, ViewMode.Year];
-    setView(view[num]);
-    setzoomState(num);
-  };
+
   const [removeDepandancy, setRemoveDepandancy] = useState<any>();
 
   const removeDepandancyFn = () => {
@@ -207,9 +203,55 @@ export default function Custom() {
       setExpanded([...(expanded ?? []), id]);
     }
   };
+  const [zoomState, setZoomState] = useState(0);
+  const Divref = useRef<HTMLDivElement | null>(null);
+
+  const viewModes = [ViewMode.Day, ViewMode.Week, ViewMode.Month, ViewMode.Year];
+  const minZoom = 0;
+  const maxZoom = viewModes.length - 1;
+
+  const zoominout = (num: number) => {
+    // Ensure zoom level is within bounds
+    const newZoomState = Math.max(minZoom, Math.min(num, maxZoom));
+    setZoomState(newZoomState);
+    setView(viewModes[newZoomState]);
+  };
+
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+
+    const handleScroll = (event: WheelEvent) => {
+      event.preventDefault();
+      if (event.ctrlKey) {
+        clearTimeout(timeoutId);
+
+        // Use debounce to handle smooth zooming
+        timeoutId = setTimeout(() => {
+          if (event.deltaY < 0 && zoomState < maxZoom) {
+            zoominout(zoomState + 1); // Increment zoom
+          } else if (event.deltaY > 0 && zoomState > minZoom) {
+            zoominout(zoomState - 1); // Decrement zoom
+          }
+        }, 150); // Adjust debounce delay as needed
+      }
+    };
+
+    const div = Divref.current;
+    if (div) {
+      div.addEventListener('wheel', handleScroll);
+    }
+
+    return () => {
+      if (div) {
+        div.removeEventListener('wheel', handleScroll);
+      }
+      clearTimeout(timeoutId); // Clean up debounce timeout
+    };
+  }, [zoomState, viewModes, minZoom, maxZoom]);
+
 
   return (
-    <div className="h-svh">
+    <div className="h-svh" ref={Divref}>
       <div className="flex gap-2 items-center ml-10 justify-between mr-10 mb-2">
         <button onClick={refetch}>
           <img src={refresh} className="w-4 min-w-4" />
@@ -221,9 +263,8 @@ export default function Custom() {
           >
             <img
               src={zoomin}
-              className={`w-4 min-w-4 ${
-                zoomState === 0 ? "opacity-50" : "opacity-100"
-              }`}
+              className={`w-4 min-w-4 ${zoomState === 0 ? "opacity-50" : "opacity-100"
+                }`}
             />
           </button>
           <button
@@ -232,9 +273,8 @@ export default function Custom() {
           >
             <img
               src={zoomout}
-              className={`w-4 min-w-4 ${
-                zoomState === 3 ? "opacity-50" : "opacity-100"
-              }`}
+              className={`w-4 min-w-4 ${zoomState === 3 ? "opacity-50" : "opacity-100"
+                }`}
             />
           </button>
         </div>
@@ -347,7 +387,7 @@ export default function Custom() {
       )}
       <Dialog
         isOpen={removeDepandancy}
-        onClose={function (): void {}}
+        onClose={function (): void { }}
         modalClass="flex w-fit rounded-md"
       >
         <div className="w-fit flex flex-col justify-between items-center gap-10 p-5">

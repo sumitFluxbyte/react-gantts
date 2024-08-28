@@ -11,7 +11,9 @@ export type GanttContentMoveAction =
   | ""
   | BarMoveAction
   | "contextmenu"
-  | "contextmenuclose";
+  | "contextmenuclose"
+  | "dragging"
+  | "hoverOnDependance";
 
 export type GanttEvent = {
   changedTask?: BarTask;

@@ -30,7 +30,7 @@ export const Project: React.FC<TaskItemProps> = ({ task, isSelected }) => {
   //console.log("projectWith", task.progressWidth, projectLeftTriangle);
 
   return (
-    <g tabIndex={0} className={styles.projectWrapper}>
+    <g tabIndex={0} className={styles.projectWrapper} id={task.id} data-taskId={task.id}>
       {/* <rect
         fill={barColor}
         x={task.x1}

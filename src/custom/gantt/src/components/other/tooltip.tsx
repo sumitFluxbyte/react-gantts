@@ -32,7 +32,6 @@ export const Tooltip: React.FC<TooltipProps> = ({
   const tooltipRef = useRef<HTMLDivElement | null>(null);
   const [mouseX, setMouseX] = useState(0);
   const [mouseY, setMouseY] = useState(0);
-
   const handleMouseMove = (event: MouseEvent) => {
     setMouseX(event.clientX + window.scrollX);
     setMouseY(event.clientY + window.scrollY);
@@ -62,7 +61,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
 };
 
 export const StandardTooltipContent: React.FC<{
-  task: Task;
+  task: any;
   fontSize: string;
   fontFamily: string;
 }> = ({ task, fontSize, fontFamily }) => {
@@ -71,24 +70,18 @@ export const StandardTooltipContent: React.FC<{
     fontFamily,
   };
   return (
-    <div className={styles.tooltipDefaultContainer} style={style}>
-      <b style={{ fontSize: fontSize + 6 }}>{`${
-        task.name
-      }: ${task.start.getDate()}-${
-        task.start.getMonth() + 1
-      }-${task.start.getFullYear()} - ${task.end.getDate()}-${
-        task.end.getMonth() + 1
-      }-${task.end.getFullYear()}`}</b>
-      {task.end.getTime() - task.start.getTime() !== 0 && (
-        <p className={styles.tooltipDefaultContainerParagraph}>{`Duration: ${~~(
-          (task.end.getTime() - task.start.getTime()) /
-          (1000 * 60 * 60 * 24)
-        )} day(s)`}</p>
-      )}
-
-      <p className={styles.tooltipDefaultContainerParagraph}>
-        {!!task.progress && `Progress: ${task.progress} %`}
-      </p>
-    </div>
+    <div className={styles.tooltipDefaultContainer + " !p-1 shadow-md rounded-md"} >
+      <div className="relative inline-block">
+        <div className=" p-2 w-52 bg-white rounded-lg shadow-lg text-gray-800 text-sm z-10">
+          <div className="font-bold text-lg">{task.name}</div>
+          <div className="mt-2">
+            <div className="flex w-full justify-between items-center my-1"><span className="font-medium">Start:</span> {task.start.toLocaleDateString()}</div>
+            <div className="flex w-full justify-between items-center my-1"><span className="font-medium">End:</span>  {task.end.toLocaleDateString()}</div>
+            <div className="flex w-full justify-between items-center my-1"><span className="font-medium">Duration:</span>  {task.duration}</div>
+            <div className="flex w-full justify-between items-center my-1"><span className="font-medium">Complete:</span> {task.progress}%</div>
+          </div>
+        </div>
+      </div>
+    </div >
   );
 };
