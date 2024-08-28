@@ -16,13 +16,14 @@ export const Bar: React.FC<TaskItemProps> = ({
 }) => {
   const progressPoint = getProgressPoint(
     +!rtl * task.progressWidth + task.progressX,
-    task.y,
+    task.y+2,
     task.height
   );
   const handleHeight = task.height - 2;
   return (
     <g className={styles.barWrapper} tabIndex={0}>
       <BarDisplay
+      task={task}
         x={task.x1}
         y={task.y}
         width={task.x2 - task.x1}
@@ -41,9 +42,9 @@ export const Bar: React.FC<TaskItemProps> = ({
           <g>
             {/* left */}
             <BarDateHandle
-              x={task.x1 + 1}
+              x={task.x1 }
               y={task.y + 1}
-              width={task.handleWidth}
+              width={task.handleWidth-5}
               height={handleHeight}
               barCornerRadius={task.barCornerRadius}
               onMouseDown={e => {
@@ -52,9 +53,9 @@ export const Bar: React.FC<TaskItemProps> = ({
             />
             {/* right */}
             <BarDateHandle
-              x={task.x2 - task.handleWidth - 1}
+              x={task.x2 - 2}
               y={task.y + 1}
-              width={task.handleWidth}
+              width={task.handleWidth-5}
               height={handleHeight}
               barCornerRadius={task.barCornerRadius}
               onMouseDown={e => {

@@ -9,7 +9,9 @@ export type GanttContentMoveAction =
   | "click"
   | "select"
   | ""
-  | BarMoveAction;
+  | BarMoveAction
+  | "contextmenu"
+  | "contextmenuclose";
 
 export type GanttEvent = {
   changedTask?: BarTask;

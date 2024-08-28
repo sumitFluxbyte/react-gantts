@@ -142,4 +142,24 @@ export interface StylingOption {
 
 export interface GanttProps extends EventOption, DisplayOption, StylingOption {
   tasks: Task[];
+  holidays?:Date[]
+  nonWorkingDays?:number[]
+  columns:columnsType[],
+  projectStartDate:Date
+  projectEndDate:Date
+  onDepandanyClick:(data:any)=>void
+  onColorChange:(data:Task)=>void
+  onDepandancyDragEnd: (
+    from: { startTaskID: string; type: string },
+    to: { endTaskID: string; type: string }
+  )  => void;
+}
+type extedTaskType = Task & {
+  assign:any[]
+}
+export type columnsType = {
+  name:string,
+  width?:number,
+  field:keyof extedTaskType,
+  render?:(data:extedTaskType)=>JSX.Element
 }

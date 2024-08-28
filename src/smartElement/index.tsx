@@ -114,20 +114,21 @@ export default function SmartElement() {
     );
     return connections;
   };
-  console.log('current',taskData.current);
-  
+
   return (
     <div>
-      <button onClick={refetch} >reload</button>
-    {taskData &&  <GanttChart
-        dataSource={taskData.current}
-        autoSchedule={false}
-        view={"week"}
-        hideResourcePanel
-        durationUnit="day"
-        snapToNearest
-
-      />}
+      <button onClick={refetch}>reload</button>
+      {taskData && (
+        <GanttChart
+          dataSource={taskData.current}
+          autoSchedule={false}
+          view={"week"}
+          hideResourcePanel
+          durationUnit="day"
+          snapToNearest
+          className="select-none"
+        />
+      )}
     </div>
   );
 }

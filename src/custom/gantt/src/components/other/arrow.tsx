@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { BarTask } from "../../types/bar-task";
 
 type ArrowProps = {
@@ -8,6 +8,7 @@ type ArrowProps = {
   taskHeight: number;
   arrowIndent: number;
   rtl: boolean;
+  depandanyData:(data:any)=>void
 };
 export const Arrow: React.FC<ArrowProps> = ({
   taskFrom,
@@ -16,6 +17,7 @@ export const Arrow: React.FC<ArrowProps> = ({
   taskHeight,
   arrowIndent,
   rtl,
+  depandanyData
 }) => {
   let path: string;
   let trianglePoints: string;
@@ -36,10 +38,10 @@ export const Arrow: React.FC<ArrowProps> = ({
       arrowIndent
     );
   }
-
+  const [width, setwidth] = useState("1.5")
   return (
     <g className="arrow">
-      <path strokeWidth="1.5" d={path} fill="none" />
+      <path strokeWidth={width} d={path} fill="none" onMouseEnter={()=>setwidth("2")} onMouseLeave={()=>setwidth("1.5")} className="" onClick={() =>depandanyData({from:taskFrom,to:taskTo})} />
       <polygon points={trianglePoints} />
     </g>
   );

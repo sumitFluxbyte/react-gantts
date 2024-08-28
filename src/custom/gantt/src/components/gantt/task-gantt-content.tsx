@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { EventOption } from "../../types/public-types";
+import React, { useEffect, useRef, useState } from "react";
+import { EventOption, Task } from "../../types/public-types";
 import { BarTask } from "../../types/bar-task";
 import { Arrow } from "../other/arrow";
 import { handleTaskBySVGMouseEvent } from "../../helpers/bar-helper";
@@ -10,7 +10,6 @@ import {
   GanttContentMoveAction,
   GanttEvent,
 } from "../../types/gantt-task-actions";
-
 export type TaskGanttContentProps = {
   tasks: BarTask[];
   dates: Date[];
@@ -27,10 +26,19 @@ export type TaskGanttContentProps = {
   fontSize: string;
   fontFamily: string;
   rtl: boolean;
+  e: any;
+  endDrag: any;
   setGanttEvent: (value: GanttEvent) => void;
   setFailedTask: (value: BarTask | null) => void;
   setSelectedTask: (taskId: string) => void;
-} & EventOption;
+  depandanyData: (data: any) => void;
+  selectedTasks: Task | any;
+  onselectionchange: () => void;
+  onDepandancyDragEnd: (
+    from: { startTaskID: string; type: string },
+    to: { endTaskID: string; type: string }
+  ) => void;
+} & EventOption & { startDrag(e: any): void; endDrag(e: any): void };
 
 export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
   tasks,
@@ -55,6 +63,12 @@ export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
   onDoubleClick,
   onClick,
   onDelete,
+  e,
+  endDrag,
+  onDepandancyDragEnd,
+  depandanyData,
+  onselectionchange,
+  selectedTasks,
 }) => {
   const point = svg?.current?.createSVGPoint();
   const [xStep, setXStep] = useState(0);
@@ -259,54 +273,142 @@ export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
       });
     }
   };
-
   const [line, setLine] = useState<any>(null);
   const [dragging, setDragging] = useState<any>(false);
-  const [startElement, setStartElement] = useState<any>(null);
+  const [startElement, setStartElement] = useState<Element | null>(null);
 
-  const startDrag = (e: any, element: any) => {
-    const { left, top, width, height } = element.getBoundingClientRect();
+  const startDrag = (e: any, data: any) => {
+    // const { left, top, width, height } = e.target.getBoundingClientRect();
     setLine({
-      x1: left + width / 2,
-      y1: top + height / 2,
-      x2: left + width / 2,
-      y2: top + height / 2,
+      x1: data.x,
+      y1: data.y,
+      x2: data.x,
+      y2: data.y,
     });
-    setStartElement(element);
+    setStartElement(e.target);
     setDragging(true);
   };
+  useEffect(() => {
+    drag(e);
+  }, [e]);
+  useEffect(() => {
+    endDragEvent(endDrag);
+  }, [endDrag]);
 
-  const drag = (e: { clientX: any; clientY: any }) => {
+  const ganttContainer = document.querySelector(".gridBody");
+  const [draggingTask, setDraggingTask] = useState<boolean>(true);
+  const drag = (e: any) => {
     if (dragging) {
-      setLine((prevLine: any) => ({
-        ...prevLine,
-        x2: e.clientX,
-        y2: e.clientY,
-      }));
-    }
-  };
-
-  const endDrag = (e: any, endElement: any) => {
-    if (dragging) {
-      if (endElement) {
-        const { left, top, width, height } = endElement.getBoundingClientRect();
+      if (ganttContainer) {
+        // Update the line position
         setLine((prevLine: any) => ({
           ...prevLine,
-          x2: left + width / 2,
-          y2: top + height / 2,
+          x2: e.clientX - ganttContainer.getBoundingClientRect().left,
+          y2: e.clientY - ganttContainer.getBoundingClientRect().top,
         }));
-        console.log("Connected:", startElement.id, "to", endElement.id);
-      } else {
-        // Reset line if not connected to a valid end element
-        setLine(null);
+  
+        // Check if the target element has an ID
+        let taskId = e.target.getAttribute("id");
+  
+        if (!taskId) {
+          // If the element doesn't have an ID, get the element behind it
+          const elementBehind = document.elementsFromPoint(e.clientX, e.clientY)[1];
+          if (elementBehind && elementBehind.getAttribute("id")) {
+            taskId = elementBehind.getAttribute("id");
+            console.log("taskId", taskId);
+
+          }
+        }
+  
+  
+        const task = tasks.find((t) => t.id === taskId);
+        const startTask = tasks.find(
+          (t) => t.id === startElement?.getAttribute("data-taskId")
+        );
+        if (startTask) {
+          if (startTask.id === task?.project || task?.id === startTask.project) {
+            setDraggingTask(false);
+          } else {
+            setDraggingTask(true);
+          }
+        }
       }
-      setDragging(false);
-      setStartElement(null);
     }
   };
+  
 
+  const endDragEvent = (e: any, data?: any) => {
+    if (dragging) {
+      setLine(null);
+      setDragging(false);
+      setStartElement(null);
+      if (
+        startElement?.getAttribute("data-taskId") &&
+        startElement?.getAttribute("data-type") &&
+        e.target
+      ) {
+        onDepandancyDragEnd(
+          {
+            startTaskID: startElement?.getAttribute("data-taskId") ?? "",
+            type: startElement?.getAttribute("data-type") ?? "",
+          },
+          {
+            endTaskID: e.target?.getAttribute("data-taskId") ?? "",
+            type: e.target?.getAttribute("data-type") ?? "",
+          }
+        );
+      }
+    }
+    setDraggingTask(true)
+
+  };
+  useEffect(() => {
+    document.addEventListener("mouseup", () => {
+      setLine(null);
+      setDragging(false);
+      setStartElement(null);
+      setDraggingTask(true)
+    });
+  }, []);
+  const [pop, setPop] = useState<string[]>([]);
+
+  useEffect(() => {
+    const temp: string[] = [];
+    const settaskpop = (selectedTasks: any) => {
+      for (let element of selectedTasks) {
+        temp.push(element.id);
+        if (element.barChildren && element.barChildren.length) {
+          settaskpop(element.barChildren);
+        }
+      }
+    };
+    if (selectedTasks && selectedTasks.barChildren) {
+      settaskpop(selectedTasks.barChildren);
+    }
+    setPop(temp);
+  }, [selectedTasks]);
   return (
     <g className="content">
+      <svg
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: "100%",
+        }}
+      >
+        {line && (
+          <line
+            x1={line.x1}
+            y1={line.y1}
+            x2={line.x2}
+            y2={line.y2}
+            stroke="#444444"
+            strokeDasharray={5}
+          />
+        )}
+      </svg>
       <g className="arrows" fill={arrowColor} stroke={arrowColor}>
         {tasks.map((task) => {
           return task.barChildren.map((child) => {
@@ -319,41 +421,18 @@ export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
                 taskHeight={taskHeight}
                 arrowIndent={arrowIndent}
                 rtl={rtl}
+                depandanyData={depandanyData}
               />
             );
           });
         })}
       </g>
-      <g
-        className="bar"
-        fontFamily={fontFamily}
-        fontSize={fontSize}
-        onMouseMove={drag}
-        onMouseUp={(e) => endDrag(e, null)}
-      >
-        <svg
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
-          }}
-        >
-          {line && (
-            <line
-              x1={line.x1}
-              y1={line.y1}
-              x2={line.x2}
-              y2={line.y2}
-              stroke="black"
-              strokeWidth="2"
-            />
-          )}
-        </svg>
+      <g className="bar" fontFamily={fontFamily} fontSize={fontSize}>
         {tasks.map((task) => {
           return (
             <TaskItem
+              selectedTasks={selectedTasks}
+              onselectionchange={onselectionchange}
               task={task}
               arrowIndent={arrowIndent}
               taskHeight={taskHeight}
@@ -364,8 +443,10 @@ export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
               key={task.id}
               isSelected={!!selectedTask && task.id === selectedTask.id}
               rtl={rtl}
-              endDrag={(e) => endDrag(e, e.target)}
-              startDrag={(e) => startDrag(e, e.target)}
+              endDrag={(e, data) => endDragEvent(e, data)}
+              startDrag={(e, data) => startDrag(e, data)}
+              pop={pop}
+              allow={draggingTask}
             />
           );
         })}

@@ -1,6 +1,6 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
-import { Gantt } from "../index";
+import { Gantt, Task } from "../index";
 
 describe("gantt", () => {
   it("renders without crashing", () => {
@@ -8,6 +8,7 @@ describe("gantt", () => {
     const root = createRoot(div);
     root.render(
       <Gantt
+        columns={[]}
         tasks={[
           {
             start: new Date(2020, 0, 1),
@@ -18,7 +19,14 @@ describe("gantt", () => {
             type: "task",
           },
         ]}
-      />
+        onDepandancyDragEnd={function (
+          from: { startTaskID: string; type: string; },
+          to: { endTaskID: string; type: string; }
+        ): void { } } onDepandanyClick={function (data: any): void {
+          throw new Error("Function not implemented.");
+        } } onColorChange={function (data: Task): void {
+          throw new Error("Function not implemented.");
+        } } projectStartDate={new Date()} projectEndDate={new Date()}      />
     );
   });
 });

@@ -1,8 +1,9 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { GridProps, Grid } from "../grid/grid";
 import { CalendarProps, Calendar } from "../calendar/calendar";
 import { TaskGanttContentProps, TaskGanttContent } from "./task-gantt-content";
 import styles from "./gantt.module.css";
+import { Task, ViewMode } from "../../types/public-types";
 
 export type TaskGanttProps = {
   gridProps: GridProps;
@@ -11,6 +12,11 @@ export type TaskGanttProps = {
   ganttHeight: number;
   scrollY: number;
   scrollX: number;
+  viewMode: ViewMode;
+  depandanyData: (data: any) => void;
+  onDepandancyDragEnd: (data: any, data2: any) => void;
+  selectedTasks: Task | undefined;
+  onselect: (data: number) => void;
 };
 export const TaskGantt: React.FC<TaskGanttProps> = ({
   gridProps,
@@ -19,11 +25,30 @@ export const TaskGantt: React.FC<TaskGanttProps> = ({
   ganttHeight,
   scrollY,
   scrollX,
+  viewMode,
+  onDepandancyDragEnd,
+  depandanyData,
+  selectedTasks,
+  onselect,
 }) => {
   const ganttSVGRef = useRef<SVGSVGElement>(null);
   const horizontalContainerRef = useRef<HTMLDivElement>(null);
   const verticalGanttContainerRef = useRef<HTMLDivElement>(null);
-  const newBarProps = { ...barProps, svg: ganttSVGRef };
+  const [e, sete] = useState<any>();
+  const [endDrag, setEndDrag] = useState<any>();
+  const onselectionchange = () => {
+    onselect(verticalGanttContainerRef.current?.scrollLeft ?? 0);
+  };
+  const newBarProps = {
+    ...barProps,
+    svg: ganttSVGRef,
+    e: e,
+    endDrag: endDrag,
+    onDepandancyDragEnd: onDepandancyDragEnd,
+    depandanyData: depandanyData,
+    selectedTasks: selectedTasks,
+    onselectionchange: onselectionchange,
+  };
 
   useEffect(() => {
     if (horizontalContainerRef.current) {
@@ -67,7 +92,12 @@ export const TaskGantt: React.FC<TaskGanttProps> = ({
           fontFamily={barProps.fontFamily}
           ref={ganttSVGRef}
         >
-          <Grid {...gridProps} />
+          <Grid
+            {...gridProps}
+            viewMode={viewMode}
+            sete={(e) => sete(e)}
+            setEndDrag={(e) => setEndDrag(e)}
+          />
           <TaskGanttContent {...newBarProps} />
         </svg>
       </div>
