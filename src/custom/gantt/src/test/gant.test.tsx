@@ -26,7 +26,9 @@ describe("gantt", () => {
           throw new Error("Function not implemented.");
         } } onColorChange={function (data: Task): void {
           throw new Error("Function not implemented.");
-        } } projectStartDate={new Date()} projectEndDate={new Date()}      />
+        } } projectStartDate={new Date()} projectEndDate={new Date()} onDepandancyDraging={function (from: { startTaskID: string; type: string; }, to: { endTaskID: string; type: string; }): void {
+          throw new Error("Function not implemented.");
+        } }      />
     );
   });
 });

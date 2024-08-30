@@ -21,7 +21,7 @@ export const Bar: React.FC<TaskItemProps> = ({
   );
   const handleHeight = task.height - 2;
   return (
-    <g className={styles.barWrapper} tabIndex={0}>
+    <g className={styles.barWrapper} tabIndex={0} data-taskId={task.id} data-type="Task">
       <BarDisplay
       task={task}
         x={task.x1}

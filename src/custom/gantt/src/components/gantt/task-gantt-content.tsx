@@ -10,6 +10,8 @@ import {
   GanttContentMoveAction,
   GanttEvent,
 } from "../../types/gantt-task-actions";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../../../../tooltip";
+import { DepandanyLineTooltip } from "../other/depandancyLineTooltip";
 export type TaskGanttContentProps = {
   tasks: BarTask[];
   dates: Date[];
@@ -35,6 +37,10 @@ export type TaskGanttContentProps = {
   selectedTasks: Task | any;
   onselectionchange: () => void;
   onDepandancyDragEnd: (
+    from: { startTaskID: string; type: string },
+    to: { endTaskID: string; type: string }
+  ) => void;
+  onDepandancyDraging: (
     from: { startTaskID: string; type: string },
     to: { endTaskID: string; type: string }
   ) => void;
@@ -68,6 +74,7 @@ export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
   onDepandancyDragEnd,
   depandanyData,
   onselectionchange,
+  onDepandancyDraging,
   selectedTasks,
 }) => {
   const point = svg?.current?.createSVGPoint();
@@ -245,6 +252,7 @@ export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
       }
     } else if (action === "mouseleave") {
       if (ganttEvent.action === "mouseenter") {
+
         setGanttEvent({ action: "" });
       }
     } else if (action === "dblclick") {
@@ -292,9 +300,76 @@ export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
     drag(e);
   }, [e]);
   useEffect(() => {
+    if (dragging) {
+      window.addEventListener("mousemove", (e: any) => {
+        if (e.target?.getAttribute("data-type")) {
+          setStrock(false)
+        } else {
+          setStrock(true)
+        }
+        if (!dragging) {
+          setDraggingTask(true)
+        }
+        onDepandancyDraging(
+          {
+            startTaskID: startElement?.getAttribute("data-taskId") ?? "",
+            type: startElement?.getAttribute("data-type") ?? "",
+          },
+          {
+            endTaskID: e.target?.getAttribute("data-taskId") ?? "",
+            type: e.target?.getAttribute("data-type") ?? "",
+          }
+        );
+        console.log({ dragging });
+
+
+        if (startElement?.getAttribute("data-type") === e.target?.getAttribute("data-type")) {
+          if (dragging) {
+            setDraggingTask(false)
+          }
+        } else {
+          const task: any = tasks.find((t) => t.id === e.target?.getAttribute("data-type"));
+          const startTask: any = tasks.find(
+            (t) => t.id === startElement?.getAttribute("data-taskId")
+          );
+          validate(task, startTask)
+        }
+      })
+      window.addEventListener("mouseup", (e: any) => {
+        if (startElement?.getAttribute("data-type") !== e.target?.getAttribute("data-type")) {
+          endDragEvent(e, "end")
+        }
+        setLine(null);
+        setDragging(false);
+        setStartElement(null);
+        setDraggingTask(true)
+        setGanttEvent({ action: '' })
+      })
+    }
+    return () => {
+      window.removeEventListener("mousemove", (e: any) => {
+        if (e.target?.getAttribute("data-type")) {
+          setStrock(false)
+        } else {
+          setStrock(true)
+        }
+        
+      })
+      window.removeEventListener("mouseup", (e: any) => {
+        if (ganttEvent.action === "dragging") {
+          setLine(null);
+          setDragging(false);
+          setStartElement(null);
+          setDraggingTask(true)
+          setGanttEvent({ action: '' })
+        }
+      })
+    }
+  }, [dragging]);
+  useEffect(() => {
     endDragEvent(endDrag);
   }, [endDrag]);
-
+  const [strock, setStrock] = useState(true)
   const ganttContainer = document.querySelector(".gridBody");
   const [draggingTask, setDraggingTask] = useState<boolean>(true);
   const drag = (e: any) => {
@@ -306,102 +381,105 @@ export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
           x2: e.clientX - ganttContainer.getBoundingClientRect().left,
           y2: e.clientY - ganttContainer.getBoundingClientRect().top,
         }));
-  
+
         // Check if the target element has an ID
         let taskId = e.target.getAttribute("id");
-  
+
         if (!taskId) {
           // If the element doesn't have an ID, get the element behind it
           const elementBehind = document.elementsFromPoint(e.clientX, e.clientY)[1];
           if (elementBehind && elementBehind.getAttribute("id")) {
             taskId = elementBehind.getAttribute("id");
-
           }
         }
-        const task:any = tasks.find((t) => t.id === taskId);
-        const startTask:any = tasks.find(
+
+        const task: any = tasks.find((t) => t.id === taskId);
+        const startTask: any = tasks.find(
           (t) => t.id === startElement?.getAttribute("data-taskId")
         );
-  
-        validate(task,startTask)
+        // console.log(startElement?.getAttribute("data-type") == e.target?.getAttribute("data-type"));
+
+
+        validate(task, startTask)
       }
     }
   };
-const validate = (task: any, startTask: any) => {
+  const validate = (task: any, startTask: any) => {
     if (!task || !startTask) return false;
 
     const startTaskLevel = startTask.level.split(".");
     const currentTaskLevel = task.level.split(".");
 
-    console.log('Start Task Level:', startTaskLevel);
-    console.log('Current Task Level:', currentTaskLevel);
+    // console.log('Start Task Level:', startTaskLevel);
+    // console.log('Current Task Level:', currentTaskLevel);
 
     setGanttEvent({ action: "dragging", originalSelectedTask: startTask, changedTask: task });
 
     // If startTask is a parent, it cannot have a dependency with its own subtasks
     if (isParent(startTaskLevel) && isSubtaskOf(startTaskLevel, currentTaskLevel)) {
-        setDraggingTask(false);
-        return false;
+      setDraggingTask(false);
+      return false;
     }
 
     // If startTask is a subtask, it cannot have a dependency with its own parent
     if (isSubtask(startTaskLevel) && isParentOf(currentTaskLevel, startTaskLevel)) {
-        setDraggingTask(false);
-        return false;
+      setDraggingTask(false);
+      return false;
     }
 
     // Parent can have dependencies with another parent's subtasks
     // Subtask can have dependencies with another parent
     if (
-        (isParent(startTaskLevel) && !isSubtaskOf(startTaskLevel, currentTaskLevel)) ||
-        (isSubtask(startTaskLevel) && !isParentOf(currentTaskLevel, startTaskLevel))
+      (isParent(startTaskLevel) && !isSubtaskOf(startTaskLevel, currentTaskLevel)) ||
+      (isSubtask(startTaskLevel) && !isParentOf(currentTaskLevel, startTaskLevel))
     ) {
-        setDraggingTask(true);
-        return true;
+      setDraggingTask(true);
+      return true;
     }
 
     setDraggingTask(false);
     return false;
-};
+  };
 
-// Helper function to check if a task is a parent task
-const isParent = (taskLevel: string[]): boolean => {
+  // Helper function to check if a task is a parent task
+  const isParent = (taskLevel: string[]): boolean => {
     return taskLevel.length === 1;
-};
+  };
 
-// Helper function to check if a task is a subtask
-const isSubtask = (taskLevel: string[]): boolean => {
+  // Helper function to check if a task is a subtask
+  const isSubtask = (taskLevel: string[]): boolean => {
     return taskLevel.length > 1;
-};
+  };
 
-// Helper function to check if a task is a subtask of another
-const isSubtaskOf = (parentLevel: string[], subtaskLevel: string[]): boolean => {
+  // Helper function to check if a task is a subtask of another
+  const isSubtaskOf = (parentLevel: string[], subtaskLevel: string[]): boolean => {
     return subtaskLevel.length > parentLevel.length &&
-           subtaskLevel.slice(0, parentLevel.length).every((level, index) => level === parentLevel[index]);
-};
+      subtaskLevel.slice(0, parentLevel.length).every((level, index) => level === parentLevel[index]);
+  };
 
-// Helper function to check if a task is a parent of another
-const isParentOf = (parentLevel: string[], subtaskLevel: string[]): boolean => {
+  // Helper function to check if a task is a parent of another
+  const isParentOf = (parentLevel: string[], subtaskLevel: string[]): boolean => {
     return parentLevel.length < subtaskLevel.length &&
-           parentLevel.every((level, index) => level === subtaskLevel[index]);
-};
-
+      parentLevel.every((level, index) => level === subtaskLevel[index]);
+  };
 
 
   const endDragEvent = (e: any, data?: any) => {
     if (dragging) {
+
       setLine(null);
       setDragging(false);
       setStartElement(null);
-      const task:any = tasks.find((t) => t.id === e.target?.getAttribute("data-taskId"));
-      const startTask:any = tasks.find(
+      const task: any = tasks.find((t) => t.id === e.target?.getAttribute("data-taskId"));
+      const startTask: any = tasks.find(
         (t) => t.id === startElement?.getAttribute("data-taskId")
       );
       if (
         startElement?.getAttribute("data-taskId") &&
         startElement?.getAttribute("data-type") &&
-        e.target && validate(task,startTask)
+        e.target && validate(task, startTask) && startElement?.getAttribute("data-type") !== e.target?.getAttribute("data-type")
       ) {
+
         onDepandancyDragEnd(
           {
             startTaskID: startElement?.getAttribute("data-taskId") ?? "",
@@ -409,7 +487,7 @@ const isParentOf = (parentLevel: string[], subtaskLevel: string[]): boolean => {
           },
           {
             endTaskID: e.target?.getAttribute("data-taskId") ?? "",
-            type: e.target?.getAttribute("data-type") ?? "",
+            type: data ?? e.target?.getAttribute("data-type") ?? "",
           }
         );
       }
@@ -417,15 +495,22 @@ const isParentOf = (parentLevel: string[], subtaskLevel: string[]): boolean => {
     setDraggingTask(true)
 
   };
+
   useEffect(() => {
-    document.addEventListener("mouseup", () => {
-      setLine(null);
-      setDragging(false);
-      setStartElement(null);
-      setDraggingTask(true)
-      setGanttEvent({action:''})
-    });
-  }, []);
+    const reset = () => {
+      if (ganttEvent.action === "dragging") {
+        setLine(null);
+        setDragging(false);
+        setStartElement(null);
+        setDraggingTask(true)
+        setGanttEvent({ action: '' })
+      }
+    }
+    document.addEventListener("mouseup", reset);
+    return () => {
+      document.removeEventListener("mouseup", reset);
+    }
+  }, [line]);
   const [pop, setPop] = useState<string[]>([]);
 
   useEffect(() => {
@@ -443,6 +528,7 @@ const isParentOf = (parentLevel: string[], subtaskLevel: string[]): boolean => {
     }
     setPop(temp);
   }, [selectedTasks]);
+
   return (
     <g className="content">
       <svg
@@ -460,8 +546,8 @@ const isParentOf = (parentLevel: string[], subtaskLevel: string[]): boolean => {
             y1={line.y1}
             x2={line.x2}
             y2={line.y2}
-            stroke={draggingTask ? "#00ff00": "#ff0000"}
-            strokeDasharray={5}
+            stroke={draggingTask ? "#00ff00" : "#ff0000"}
+            strokeDasharray={strock ? 5 : 0}
           />
         )}
       </svg>

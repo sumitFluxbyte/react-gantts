@@ -17,8 +17,9 @@ export const Milestone: React.FC<TaskItemProps> = ({
   };
 
   return (
-    <g tabIndex={0} className={styles.milestoneWrapper}>
+    <g tabIndex={0} className={styles.milestoneWrapper} data-taskId={task.id} data-type="Task">
       <rect
+      data-type="Task" data-taskId={task.id}
         fill={getBarColor()}
         x={task.x1}
         width={task.height}

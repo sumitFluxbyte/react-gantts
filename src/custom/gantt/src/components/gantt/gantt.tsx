@@ -87,7 +87,7 @@ export const Gantt: React.FunctionComponent<GanttProps> = ({
     undefined
   );
 
-  const [taskListWidth, setTaskListWidth] = useState(0);
+  const [taskListWidth, setTaskListWidth] = useState(250);
   const [svgContainerWidth, setSvgContainerWidth] = useState(0);
   const [svgContainerHeight, setSvgContainerHeight] = useState(ganttHeight);
   const [barTasks, setBarTasks] = useState<BarTask[]>([]);
@@ -298,7 +298,7 @@ export const Gantt: React.FunctionComponent<GanttProps> = ({
         }
       }
     }
-  }, [ganttEvent, barTasks, taskHeight]);
+  }, [ganttEvent, barTasks]);
   useEffect(() => {
     const { changedTask, action } = ganttEvent;
     if (action === "contextmenu" && changedTask) {
@@ -518,10 +518,10 @@ export const Gantt: React.FunctionComponent<GanttProps> = ({
   };
   // const handleExpanderClick = (task: Task) => {
   //   console.log(task);
-    
+
   //   // Toggle the hideChildren property of the clicked task
   //   const newHideChildren = !task.hideChildren;
-  
+
   //   // Function to recursively toggle visibility of children tasks
   //   const toggleChildrenVisibility = (tasks: BarTask[], parentId: string, hide: boolean): BarTask[] => {
   //     return tasks.map((t:any) => {
@@ -534,19 +534,19 @@ export const Gantt: React.FunctionComponent<GanttProps> = ({
   //       return t;
   //     });
   //   };
-  
+
   //   // Update the visibility of children tasks in the state
   //   setBarTasks(prevTasks => {
   //     // First, toggle the clicked task's hideChildren property
   //     const updatedTasks = prevTasks.map(t => 
   //       t.id === task.id ? { ...t, hideChildren: newHideChildren } : t
   //     );
-  
+
   //     // Then, recursively update the visibility of its child tasks
   //     return toggleChildrenVisibility(updatedTasks, task.id, newHideChildren);
   //   });
   // };
-     
+
   const gridProps: GridProps = {
     columnWidth,
     svgWidth,
@@ -555,8 +555,8 @@ export const Gantt: React.FunctionComponent<GanttProps> = ({
     dates: dateSetup.dates,
     todayColor,
     rtl,
-    sete(data) {},
-    setEndDrag(data) {},
+    sete(data) { },
+    setEndDrag(data) { },
     nonWorkingDays,
     holidays,
     projectStartDate,
@@ -569,7 +569,7 @@ export const Gantt: React.FunctionComponent<GanttProps> = ({
     viewMode,
     headerHeight,
     columnWidth,
-    fontFamily, 
+    fontFamily,
     fontSize,
     rtl,
   };
@@ -598,6 +598,7 @@ export const Gantt: React.FunctionComponent<GanttProps> = ({
     onDelete,
   };
   const [selectedTasks, setSelectedTasks] = useState<Task>();
+
   const tableProps: TaskListProps = {
     rowHeight,
     rowWidth: listCellWidth,
@@ -611,6 +612,7 @@ export const Gantt: React.FunctionComponent<GanttProps> = ({
     horizontalContainerClass: styles.horizontalContainer,
     selectedTask,
     taskListRef,
+    taskListWidth,
     setSelectedTask: handleSelectedTask,
     onExpanderClick: handleExpanderClick,
     TaskListHeader,
@@ -624,7 +626,38 @@ export const Gantt: React.FunctionComponent<GanttProps> = ({
       }
     },
   };
-  
+  const [isResizing, setIsResizing] = useState(false);
+  useEffect(() => {
+    // Set the initial width to the current width of the task list
+    if (taskListRef.current) {
+      setTaskListWidth(taskListRef.current.clientWidth);
+    }
+  }, [taskListRef]);
+
+  const startResizing = (e: React.MouseEvent) => {
+    setIsResizing(true);
+    document.addEventListener("mousemove", resize);
+    document.addEventListener("mouseup", stopResizing);
+  };
+
+  const resize = (e: MouseEvent) => {
+    if (taskListRef.current && taskListWidth !== undefined) {
+      const newWidth =
+        e.clientX - taskListRef.current.getBoundingClientRect().left;
+      setTaskListWidth(newWidth);
+    }
+  };
+
+  const stopResizing = () => {
+    setIsResizing(false);
+    document.removeEventListener("mousemove", resize);
+    document.removeEventListener("mouseup", stopResizing);
+  };
+  const [valid, setvalid] = useState<{start:string,end:string}>()
+
+  const onDepandancyDraging = (start:string,end:string) =>{
+    setvalid({end:end,start:start})
+  }
   return (
     <div className="gantt">
       <div
@@ -632,8 +665,54 @@ export const Gantt: React.FunctionComponent<GanttProps> = ({
         onKeyDown={handleKeyDown}
         tabIndex={0}
         ref={wrapperRef}
+
       >
-        {listCellWidth && <TaskList {...tableProps} />}
+        {listCellWidth &&
+          <div className="relative group">
+            <TaskList {...tableProps} /> <div
+              id="dragbar"
+              style={{
+                top: 0,
+                height: "100%",
+                right: 0,
+                width: "5px",
+                background: "#505050",
+                position: "absolute",
+                opacity: isResizing ? 1 : .2,
+                cursor: "col-resize",
+                transition: isResizing
+                  ? "opacity 0.3s ease-in-out 0.3s"
+                  : "0.3s ease-in-out 0s, opacity 0.3s ease-in-out 0s",
+              }}
+              onMouseDown={startResizing}
+              onMouseEnter={() => setIsResizing(true)}
+              onMouseLeave={() => setIsResizing(false)}
+            ></div>
+            <div id="dragbar"
+              className="opacity-0 group-hover:opacity-100 select-none transition-opacity duration-150  rounded-full"
+              style={{
+                top: "50%",
+                height: "40px",
+                right: 0,
+                width: "40px",
+                position: "absolute",
+                cursor: "pointer",
+                transform: "translate(44%,-15%)",
+              }}>
+
+              <div className="flex h-full w-full gap-2 justify-center items-center text-xl text-white bg-gray-300/30 rounded-full font-semibold">
+                <div className="text-gray-700 hover:text-emerald-700 " onClick={() => setTaskListWidth(8)}>
+                  &lt;
+                </div>
+                {wrapperRef && wrapperRef.current &&
+                  <div className="text-gray-700 hover:text-emerald-700" onClick={() => setTaskListWidth((wrapperRef.current?.clientWidth??250) - 10)}>
+                    &gt;
+                  </div>
+                }
+              </div>
+            </div>
+          </div>}
+
         <TaskGantt
           gridProps={gridProps}
           calendarProps={calendarProps}
@@ -646,13 +725,17 @@ export const Gantt: React.FunctionComponent<GanttProps> = ({
             s: { startTaskID: string; type: string },
             e: { endTaskID: string; type: string }
           ) => onDepandancyDragEnd(s, e)}
+          onDepandancyDraging={(
+            s: { startTaskID: string; type: string },
+            e: { endTaskID: string; type: string }
+          ) => onDepandancyDraging(s.type, e.type)}
           depandanyData={onDepandanyClick}
           selectedTasks={selectedTasks}
           onselect={function (data: number): void {
             setScrollX(data);
           }}
         />
-        {ganttEvent.changedTask && taskHeight   && ganttEvent.action == "mouseenter"&& (
+        {ganttEvent.changedTask && taskHeight && ganttEvent.action == "mouseenter" && (
           <Tooltip
             arrowIndent={arrowIndent}
             rowHeight={rowHeight}
@@ -668,14 +751,15 @@ export const Gantt: React.FunctionComponent<GanttProps> = ({
             svgWidth={svgWidth}
           />
         )}
-        {ganttEvent.changedTask &&ganttEvent.originalSelectedTask && ganttEvent.action === "dragging" && (
+        {ganttEvent.changedTask && ganttEvent.originalSelectedTask && ganttEvent.action === "dragging" && (
           <DepandanyTooltip
             endTask={ganttEvent.changedTask}
             task={ganttEvent.originalSelectedTask}
-           
+            valid={valid}
+
           />
         )}
-        {ganttEvent.changedTask &&ganttEvent.originalSelectedTask && ganttEvent.action === "hoverOnDependance" && (
+        {ganttEvent.changedTask && ganttEvent.originalSelectedTask && ganttEvent.action === "hoverOnDependance" && (
           <DepandanyLineTooltip
             endTask={ganttEvent.changedTask}
             task={ganttEvent.originalSelectedTask}
@@ -696,8 +780,8 @@ export const Gantt: React.FunctionComponent<GanttProps> = ({
             svgWidth={svgWidth}
             onColorChange={onColorChange}
             remove={() => {
-              setGanttEvent({ action: "" });
               setcontextManu(false);
+              setGanttEvent({ action: "" });
             }}
           />
         )}

@@ -11,7 +11,7 @@ export default function Custom() {
     subtask?: GanttTaskExtendedType[];
     duration: number;
     assign: any[];
-    level?: string;
+    level: string;
   };
   const [tasks, setTasks] = useState<Task[] | any>();
   const [convertedData, setConvertedData] = useState<any[]>();
@@ -137,6 +137,7 @@ export default function Custom() {
       subtask,
       assign: originalTask.assignedUsers,
       duration: originalTask.duration,
+      level: '',
       styles: {
         backgroundSelectedColor: originalTask.ganttColor
           ? originalTask.ganttColor
@@ -164,7 +165,7 @@ export default function Custom() {
 
     return duration === 0 ? 1 : duration;
   }
-  console.log("convertedData.current", convertedData);
+  // console.log("convertedData.current", convertedData);
   const [view, setView] = useState(ViewMode.Day);
   function dateFormater(inputDate: Date): string {
     const date = new Date(inputDate);
@@ -227,14 +228,15 @@ export default function Custom() {
 
         // Use debounce to handle smooth zooming
         timeoutId = setTimeout(() => {
-          if (event.deltaY < 0 && zoomState < maxZoom) {
-            zoominout(zoomState + 1); // Increment zoom
-          } else if (event.deltaY > 0 && zoomState > minZoom) {
+          if (event.deltaY < 0 && zoomState > minZoom) {
             zoominout(zoomState - 1); // Decrement zoom
+          } else if (event.deltaY > 0 && zoomState < maxZoom) {
+            zoominout(zoomState + 1); // Increment zoom
           }
-        }, 150); // Adjust debounce delay as needed
+        }, 100); // Adjust debounce delay as needed
       }
     };
+
 
     const div = Divref.current;
     if (div) {
@@ -245,13 +247,128 @@ export default function Custom() {
       if (div) {
         div.removeEventListener('wheel', handleScroll);
       }
-      clearTimeout(timeoutId); // Clean up debounce timeout
+      clearTimeout(timeoutId);
     };
   }, [zoomState, viewModes, minZoom, maxZoom]);
+  function calculateDurations(startDate: Date, endDate: Date): number {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
 
+    // Initialize duration in days
+    let duration = 0;
+
+    // Define non-working days (e.g., weekends: Sunday = 0, Saturday = 6)
+    const nonWorkingDays = [0, 6];
+
+    // List of holidays
+    const holidays = [
+      dateFormater(new Date("2024-08-26")),
+      dateFormater(new Date("2024-08-28")),
+      dateFormater(new Date("2024-09-01")),
+    ];
+
+    // Loop from start date to end date
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      const day = d.getDay();
+      const formattedDate = dateFormater(d);
+
+      // Check if it's a non-working day (weekend) or a holiday
+      if (!nonWorkingDays.includes(day) && !holidays.includes(formattedDate)) {
+        duration++;
+      }
+    }
+
+    return duration;
+  }
+  function updateParentTask(taskList: GanttTaskExtendedType[], parentLevel = "") {
+    const subTasks = taskList.filter(task => {
+      const taskParentLevel = task.level.slice(0, task.level.lastIndexOf('.'));
+      return taskParentLevel === parentLevel;
+    });
+
+    subTasks.forEach(task => {
+      updateParentTask(taskList, task.level);
+    });
+
+    if (parentLevel) {
+      const parentTask = taskList.find(t => t.level === parentLevel);
+
+      if (parentTask) {
+        let earliestStartDate: string | number | Date | null = null;
+        let latestEndDate: string | number | Date | null = null;
+
+        subTasks.forEach(task => {
+          if (!earliestStartDate || new Date(task.start) < new Date(earliestStartDate)) {
+            earliestStartDate = task.start;
+          }
+          if (!latestEndDate || new Date(task.end) > new Date(latestEndDate)) {
+            latestEndDate = task.end;
+          }
+        });
+
+        if (earliestStartDate) parentTask.start = earliestStartDate;
+        if (latestEndDate) parentTask.end = latestEndDate;
+      }
+    }
+
+    // Return the updated task list
+    return taskList;
+  }
+  function updateTaskDates(convertedData: GanttTaskExtendedType[], task: GanttTaskExtendedType) {
+    if (convertedData) {
+      const tasks = convertedData.map((t) => {
+        if (t.id === task.id) {
+          // Calculate the duration based on the start and end date
+          let updatedTask = calculateDurations(task.start, task.end);
+          let FindTask = convertedData.find(t => t.id === task.id);
+          if (FindTask) {
+
+            // Format the dates for comparison
+            if (dateFormater(task.start) === dateFormater(FindTask.start)) {
+              const end = new Date(task.start);
+              let daysToAdd = updatedTask;
+
+              // Extend the end date considering holidays and non-working days
+              while (daysToAdd > 0) {
+                end.setDate(end.getDate() + 1);
+
+                // Check if the current date is a non-working day or holiday
+                if (!isNonWorkingDayOrHoliday(end)) {
+                  daysToAdd--;
+                }
+              }
+
+              task.end = end;
+            }
+          }
+
+          // Update the task in the array
+          t = task;
+          return t;
+        } else {
+          return t;
+        }
+      });
+
+      // Update the parent task
+      setConvertedData(updateParentTask(tasks));
+    }
+  }
+  function isNonWorkingDayOrHoliday(date: Date): boolean {
+    const day = date.getDay();
+
+    // Example: Assuming weekends (Saturday and Sunday) are non-working days
+    const isWeekend = (day === 0 || day === 6);
+
+    // Add your holiday check here, e.g., using an array of holiday dates
+    const holidays = ["2024-08-26", "2024-08-28", "2024-09-01"]; // Example holidays
+    const isHoliday = holidays.includes(dateFormater(date));
+
+    return isWeekend || isHoliday;
+  }
 
   return (
-    <div className="h-svh" ref={Divref}>
+    <div className="" ref={Divref}>
       <div className="flex gap-2 items-center ml-10 justify-between mr-10 mb-2">
         <button onClick={refetch}>
           <img src={refresh} className="w-4 min-w-4" />
@@ -311,8 +428,7 @@ export default function Custom() {
                           >
                             <UserAvatar
                               className="shadow-sm shadow-gray-300 border-2 border-white"
-                              user={item.user}
-                            />
+                              user={item.user} />
                           </div>
                         );
                       })}
@@ -352,7 +468,7 @@ export default function Custom() {
             viewMode={view}
             tasks={convertedData}
             preStepsCount={2}
-            onDateChange={(e) => console.log("e", e)}
+            onDateChange={(e) => { updateTaskDates(convertedData, e as GanttTaskExtendedType); }}
             onProgressChange={(e) => console.log("e", e)}
             onExpanderClick={(e) => expandToggle(e.id)}
             holidays={[
@@ -362,8 +478,8 @@ export default function Custom() {
             ]}
             nonWorkingDays={[0, 6]}
             onDepandancyDragEnd={function (
-              from: { startTaskID: string; type: string },
-              to: { endTaskID: string; type: string }
+              from: { startTaskID: string; type: string; },
+              to: { endTaskID: string; type: string; }
             ): void {
               let temp: any[] = [];
               if (convertedData) {
@@ -381,8 +497,10 @@ export default function Custom() {
             }}
             onDepandanyClick={function (data: any): void {
               setRemoveDepandancy(data);
-            }}
-          />
+            }} onDepandancyDraging={function (from: { startTaskID: string; type: string; }, to: { endTaskID: string; type: string; }): void {
+
+
+            }} />
         </div>
       )}
       <Dialog

@@ -49,7 +49,7 @@ export const ContextManu: React.FC<ContextMenuProps> = ({
     setIsVisible(false);
     remove();
   };
-
+  
   const handleClickOutside = (event: MouseEvent) => {
     if (
       contextMenuRef.current &&

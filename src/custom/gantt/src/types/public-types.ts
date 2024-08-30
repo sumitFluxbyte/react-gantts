@@ -149,6 +149,10 @@ export interface GanttProps extends EventOption, DisplayOption, StylingOption {
   projectEndDate:Date
   onDepandanyClick:(data:any)=>void
   onColorChange:(data:Task)=>void
+  onDepandancyDraging:(
+    from: { startTaskID: string; type: string },
+    to: { endTaskID: string; type: string }
+  )  => void;
   onDepandancyDragEnd: (
     from: { startTaskID: string; type: string },
     to: { endTaskID: string; type: string }

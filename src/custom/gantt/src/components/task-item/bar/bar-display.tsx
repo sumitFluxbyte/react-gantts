@@ -43,8 +43,9 @@ export const BarDisplay: React.FC<BarDisplayProps> = ({
   };
 
   return (
-    <g onMouseDown={onMouseDown}>
+    <g onMouseDown={onMouseDown} data-type="Task" data-taskId={task.id}>
       <rect
+      data-type="Task" data-taskId={task.id}
         id={task.id}
         x={x}
         width={width}
@@ -56,6 +57,7 @@ export const BarDisplay: React.FC<BarDisplayProps> = ({
         className={style.barBackground}
       />
       <rect
+      data-type="Task" data-taskId={task.id}
         id={task.id}
         x={progressX}
         width={progressWidth}

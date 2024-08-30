@@ -15,6 +15,7 @@ export type TaskGanttProps = {
   viewMode: ViewMode;
   depandanyData: (data: any) => void;
   onDepandancyDragEnd: (data: any, data2: any) => void;
+  onDepandancyDraging: (data: any, data2: any) => void;
   selectedTasks: Task | undefined;
   onselect: (data: number) => void;
 };
@@ -27,6 +28,7 @@ export const TaskGantt: React.FC<TaskGanttProps> = ({
   scrollX,
   viewMode,
   onDepandancyDragEnd,
+  onDepandancyDraging,
   depandanyData,
   selectedTasks,
   onselect,
@@ -45,9 +47,11 @@ export const TaskGantt: React.FC<TaskGanttProps> = ({
     e: e,
     endDrag: endDrag,
     onDepandancyDragEnd: onDepandancyDragEnd,
+    onDepandancyDraging: onDepandancyDraging,
     depandanyData: depandanyData,
     selectedTasks: selectedTasks,
     onselectionchange: onselectionchange,
+    ganttSVGRef
   };
 
   useEffect(() => {

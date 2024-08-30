@@ -6,12 +6,13 @@ import styles from "./tooltip.module.css";
 export type TooltipProps = {
   task: BarTask;
   endTask: BarTask
+  valid:{start:string,end:string} | undefined
 };
 
 export const DepandanyTooltip: React.FC<TooltipProps> = ({
   task,
-  endTask
-
+  endTask,
+  valid
 }) => {
   const tooltipRef = useRef<HTMLDivElement | null>(null);
   const [mouseX, setMouseX] = useState(0);
@@ -30,7 +31,7 @@ export const DepandanyTooltip: React.FC<TooltipProps> = ({
       ganttElement.removeEventListener("mousemove", handleMouseMove);
     };
   }, []); // Empty dependency array to ensure the effect runs only once
-  console.log("call,DepandanyTooltip");
+  // console.log("call,DepandanyTooltip");
 
   const tooltipStyle = {
     left: `${mouseX + 15}px`, // Offset to avoid covering the mouse pointer
@@ -42,7 +43,8 @@ export const DepandanyTooltip: React.FC<TooltipProps> = ({
       className={styles.tooltipDetailsContainer}
       style={tooltipStyle}
     >
-      <StandardTooltipContent task={task} endTask={endTask} />
+  
+      <StandardTooltipContent task={task} endTask={endTask} valid={valid} />
     </div>
   );
 };
@@ -50,16 +52,20 @@ export const DepandanyTooltip: React.FC<TooltipProps> = ({
 export const StandardTooltipContent: React.FC<{
   task: Task;
   endTask: Task
+  valid:{start:string,end:string} | undefined
 
-}> = ({ task, endTask }) => {
+
+}> = ({ task, endTask,valid }) => {
   const validate = (task: any, startTask: any) => {
     if (!task || !startTask) return false;
-
+    if (valid && valid.start == valid.end) {
+      return false
+    }
     const startTaskLevel = startTask.level.split(".");
     const currentTaskLevel = task.level.split(".");
 
-    console.log('Start Task Level:', startTaskLevel);
-    console.log('Current Task Level:', currentTaskLevel);
+    // console.log('Start Task Level:', startTaskLevel);
+    // console.log('Current Task Level:', currentTaskLevel);
 
     // If startTask is a parent, it cannot have a dependency with its own subtasks
     if (isParent(startTaskLevel) && isSubtaskOf(startTaskLevel, currentTaskLevel)) {

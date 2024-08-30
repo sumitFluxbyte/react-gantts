@@ -19,6 +19,7 @@ export type TaskListProps = {
   setSelectedTask: (task: string) => void;
   onExpanderClick: (task: Task) => void;
   taskSelect: (task: Task) => void;
+  taskListWidth:number;
   TaskListHeader: React.FC<{
     headerHeight: number;
     rowWidth: string;
@@ -34,7 +35,7 @@ export type TaskListProps = {
     locale: string;
     tasks: Task[];
     selectedTaskId: string;
-    columns:columnsType[];
+    columns: columnsType[];
     setSelectedTask: (taskId: string) => void;
     onExpanderClick: (task: Task) => void;
     taskSelect: (task: Task) => void;
@@ -59,12 +60,12 @@ export const TaskList: React.FC<TaskListProps> = ({
   horizontalContainerClass,
   TaskListHeader,
   TaskListTable,
+  taskListWidth,
   columns,
 }) => {
-  
+
   const horizontalContainerRef = useRef<HTMLDivElement>(null);
-  const [isResizing, setIsResizing] = useState(false);
-  const [taskListWidth, setTaskListWidth] = useState<number | undefined>(250);
+
 
   useEffect(() => {
     if (horizontalContainerRef.current) {
@@ -72,33 +73,7 @@ export const TaskList: React.FC<TaskListProps> = ({
     }
   }, [scrollY]);
 
-  useEffect(() => {
-    // Set the initial width to the current width of the task list
-    if (taskListRef.current) {
-      setTaskListWidth(taskListRef.current.clientWidth);
-    }
-  }, [taskListRef]);
-
-  const startResizing = (e: React.MouseEvent) => {
-    setIsResizing(true);
-    document.addEventListener("mousemove", resize);
-    document.addEventListener("mouseup", stopResizing);
-  };
-
-  const resize = (e: MouseEvent) => {
-    if (taskListRef.current && taskListWidth !== undefined) {
-      const newWidth =
-      e.clientX - taskListRef.current.getBoundingClientRect().left;
-        setTaskListWidth(newWidth);
-    }
-  };
-
-  const stopResizing = () => {
-    setIsResizing(false);
-    document.removeEventListener("mousemove", resize);
-    document.removeEventListener("mouseup", stopResizing);
-  };
-
+ 
   const headerProps = {
     headerHeight,
     fontFamily,
@@ -126,7 +101,7 @@ export const TaskList: React.FC<TaskListProps> = ({
   return (
     <div
       ref={taskListRef}
-      className="max-w-fit min-[200px] rmResizeIcon"
+      className="max-w-fit  rmResizeIcon"
       style={{
         width: `${taskListWidth}px`,
         minWidth: `${taskListWidth}px`,
@@ -144,25 +119,7 @@ export const TaskList: React.FC<TaskListProps> = ({
       >
         <TaskListTable {...tableProps} />
       </div>
-      <div
-        id="dragbar"
-        style={{
-          top: 0,
-          height: "100%",
-          right: 0,
-          width: "5px",
-          background: "#505050",
-          position: "absolute",
-          opacity: isResizing ? 1 : .2,
-          cursor: "col-resize",
-          transition: isResizing
-            ? "opacity 0.3s ease-in-out 0.3s"
-            : "0.3s ease-in-out 0s, opacity 0.3s ease-in-out 0s",
-        }}
-        onMouseDown={startResizing}
-        onMouseEnter={() => setIsResizing(true)}
-        onMouseLeave={() => setIsResizing(false)}
-      ></div>
+     
     </div>
   );
 };
