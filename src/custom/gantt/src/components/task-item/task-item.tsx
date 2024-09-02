@@ -243,7 +243,7 @@ export const TaskItem: React.FC<TaskItemProps> = (props) => {
           x={getX()}
           y={
             task.typeInternal === "project"
-              ? task.y + taskHeight * 0.2
+              ? task.y + taskHeight * 0.34
               : task.y + taskHeight * 0.5
           }
           className={

@@ -1,6 +1,6 @@
 .calendarBottomText {
   text-anchor: middle;
-  fill: #333;
+  fill: #787486cc;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   -moz-user-select: none;
@@ -15,7 +15,7 @@
 
 .calendarTopText {
   text-anchor: middle;
-  fill: #555;
+  fill: #555555aa;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   -moz-user-select: none;

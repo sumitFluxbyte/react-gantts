@@ -26,6 +26,7 @@ import styles from "./gantt.module.css";
 import { ContextManu } from "../other/contextmanu";
 import { DepandanyTooltip } from "../other/depandancyTooltip";
 import { DepandanyLineTooltip } from "../other/depandancyLineTooltip";
+import dropDown from "../../../../svg/dropDown.svg";
 
 export const Gantt: React.FunctionComponent<GanttProps> = ({
   tasks,
@@ -653,10 +654,10 @@ export const Gantt: React.FunctionComponent<GanttProps> = ({
     document.removeEventListener("mousemove", resize);
     document.removeEventListener("mouseup", stopResizing);
   };
-  const [valid, setvalid] = useState<{start:string,end:string}>()
+  const [valid, setvalid] = useState<{ start: string, end: string }>()
 
-  const onDepandancyDraging = (start:string,end:string) =>{
-    setvalid({end:end,start:start})
+  const onDepandancyDraging = (start: string, end: string) => {
+    setvalid({ end: end, start: start })
   }
   return (
     <div className="gantt">
@@ -676,9 +677,9 @@ export const Gantt: React.FunctionComponent<GanttProps> = ({
                 height: "100%",
                 right: 0,
                 width: "5px",
-                background: "#505050",
+                background: "#e5e5e5",
                 position: "absolute",
-                opacity: isResizing ? 1 : .2,
+                opacity: isResizing ? 1 : .8,
                 cursor: "col-resize",
                 transition: isResizing
                   ? "opacity 0.3s ease-in-out 0.3s"
@@ -692,21 +693,21 @@ export const Gantt: React.FunctionComponent<GanttProps> = ({
               className="opacity-0 group-hover:opacity-100 select-none transition-opacity duration-150  rounded-full"
               style={{
                 top: "50%",
-                height: "40px",
+                height: "45px",
                 right: 0,
-                width: "40px",
+                width: "45px",
                 position: "absolute",
                 cursor: "pointer",
                 transform: "translate(44%,-15%)",
               }}>
 
-              <div className="flex h-full w-full gap-2 justify-center items-center text-xl text-white bg-gray-300/30 rounded-full font-semibold">
-                <div className="text-gray-700 hover:text-emerald-700 " onClick={() => setTaskListWidth(8)}>
-                  &lt;
+              <div className="flex h-full w-full gap-1 p-1 justify-center items-center text-xl text-white bg-[#e5e5e5] rounded-full font-semibold">
+                <div className="text-gray-700 opacity-65 hover:text-emerald-700 hover:opacity-100 flex items-center justify-center " onClick={() => setTaskListWidth(8)}>
+                  <img src={dropDown} className="w-6 min-w-6 -rotate-90" />
                 </div>
                 {wrapperRef && wrapperRef.current &&
-                  <div className="text-gray-700 hover:text-emerald-700" onClick={() => setTaskListWidth((wrapperRef.current?.clientWidth??250) - 10)}>
-                    &gt;
+                  <div className="text-gray-700 opacity-65 hover:text-emerald-700 flex items-center hover:opacity-100 justify-center" onClick={() => setTaskListWidth((wrapperRef.current?.clientWidth ?? 250) - 10)}>
+                    <img src={dropDown} className="w-6 min-w-6 rotate-90" />
                   </div>
                 }
               </div>

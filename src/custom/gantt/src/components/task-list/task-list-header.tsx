@@ -25,7 +25,7 @@ export const TaskListHeaderDefault: React.FC<{
         {columns.map((c) => (
           <>
             <div
-              className={styles.ganttTable_HeaderItem}
+              className={styles.ganttTable_HeaderItem + " text-center font-semibold text-[#787486]"}
               style={{
                 minWidth: c.width ? `${c.width}px` : rowWidth,
               }}

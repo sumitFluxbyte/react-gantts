@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState } from "react";
 import { Task } from "../../types/public-types";
 import { BarTask } from "../../types/bar-task";
 import styles from "./tooltip.module.css";
+import InIcon from "../../../../svg/In.svg";
 
 export type TooltipProps = {
   task: BarTask;
@@ -112,23 +113,23 @@ export const StandardTooltipContent: React.FC<{
   };
 
   return (
-    <div className={styles.tooltipDefaultContainer + " rounded-md flex flex-row-reverse !p-0 "} style={{ border: `solid 2px ${!validate(endTask, task) ? "red" : "green"}`, backgroundColor: `${!validate(endTask, task) ? "red" : "green"}` }} >
-      <div style={{ backgroundColor: `${!validate(endTask, task) ? "red" : "green"}` }} className="text-center text-white font-semibold flex justify-center items-center w-6" >
-        <p className="rotate-90">
+    <div className={styles.tooltipDefaultContainer + " rounded-md flex flex-col-reverse !p-0 "} style={{ border: `solid 2px ${!validate(endTask, task) ? "red" : "green"}`, backgroundColor: `${!validate(endTask, task) ? "red" : "green"}` }} >
+      <div style={{ backgroundColor: `${!validate(endTask, task) ? "red" : "green"}` }} className="text-center   text-white font-semibold flex justify-center items-center w-full " >
+        <p className="">
           {!validate(endTask, task) ? "Invalid" : "Valid"}
         </p>
       </div>
       <div className="bg-white rounded-md p-2 ">
         From
         <br />
-        <p className="text-base font-semibold">
-          {task.name}
+        <p className="text-base font-semibold flex gap-2 items-center">
+          {task.name}<img src={InIcon} className=" w-4 max-w-4 text-red-400" alt="" />
         </p>
-
+        
         To
         <br />
-        <p className="text-base font-semibold">
-          {endTask.name}
+        <p className="text-base font-semibold flex gap-2 items-center">
+          {endTask.name} <img src={InIcon} className="rotate-180 w-4 max-w-4 text-red-400" alt="" />
         </p>
       </div>
     </div>

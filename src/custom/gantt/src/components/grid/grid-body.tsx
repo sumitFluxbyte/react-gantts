@@ -125,7 +125,7 @@ export const GridBody: React.FC<GridBodyProps> = ({
           y={0}
           width={columnWidth}
           height={y}
-          fill={"#ff676722"}
+          fill={"#299d9122"}
           className="bg-slate-300"
         />
       );
@@ -156,7 +156,7 @@ export const GridBody: React.FC<GridBodyProps> = ({
             y={0}
             width={columnWidth}
             height={y}
-            fill={todayColor} // You can adjust the color as needed
+            fill={"#78748611"} // You can adjust the color as needed
             className={styles.holidayRect}
           />
         );
@@ -171,7 +171,7 @@ export const GridBody: React.FC<GridBodyProps> = ({
             y={0}
             width={columnWidth}
             height={y}
-            fill={todayColor} // Adjust the color as needed
+            fill={"#78748611"} // Adjust the color as needed
             className={styles.holidayRect}
           />
         );
